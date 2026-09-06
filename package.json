@@ -30,5 +30,8 @@
   },
   "devDependencies": {
     "turndown": "^7.2.4"
+  },
+  "overrides": {
+    "path-to-regexp": "6.3.0"
   }
 }
