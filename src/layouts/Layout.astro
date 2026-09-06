@@ -1,0 +1,86 @@
+---
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} · Digital Figments</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #1a1a1a;
+        --bg: #fdfdfb;
+        --muted: #6b6b6b;
+        --accent: #3a6b5a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #eaeaea;
+          --bg: #14161a;
+          --muted: #9a9a9a;
+          --accent: #7fbfa6;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: baseline;
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 1rem;
+      }
+      header a.brand {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--fg);
+        text-decoration: none;
+      }
+      nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+      nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; }
+      nav a:hover { color: var(--accent); }
+      main { max-width: 780px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+      img, video { max-width: 100%; border-radius: 8px; }
+      audio { width: 100%; }
+      footer {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">Digital Figments</a>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/music/">Music</a>
+        <a href="/donate/">Donate</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p>&copy; {new Date().getFullYear()} Andy Lacroce</p>
+    </footer>
+  </body>
+</html>

@@ -1,17 +1,40 @@
 ---
+import { getCollection, render } from "astro:content";
+import Layout from "../layouts/Layout.astro";
 
+const posts = (await getCollection("posts")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const rendered = await Promise.all(posts.map((p) => render(p)));
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Home">
+  <ul class="post-list">
+    {posts.map((post, i) => {
+      const { Content } = rendered[i];
+      return (
+        <li class="post">
+          <a class="post-title" href={`/posts/${post.id}/`}>
+            <h2>{post.data.title}</h2>
+          </a>
+          <p class="post-meta">
+            {post.data.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+            {" · "}{post.data.category}
+          </p>
+          <div class="post-body">
+            <Content />
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+</Layout>
+
+<style>
+  .post-list { list-style: none; margin: 0; padding: 0; }
+  .post { margin-bottom: 3rem; padding-bottom: 3rem; border-bottom: 1px solid rgba(128,128,128,0.2); }
+  .post:last-child { border-bottom: none; }
+  .post-title { text-decoration: none; color: inherit; }
+  .post-title h2 { margin: 0 0 0.25rem; font-size: 1.3rem; }
+  .post-meta { margin: 0 0 1rem; color: var(--muted); font-size: 0.85rem; text-transform: capitalize; }
+</style>

@@ -1,0 +1,10 @@
+{
+  "song": "Magic",
+  "artist": "Ben Folds Five",
+  "date": "11/2022",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2022/11/magic.mp3"
+  },
+  "order": 24
+}

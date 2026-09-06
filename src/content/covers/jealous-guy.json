@@ -1,0 +1,10 @@
+{
+  "song": "Jealous Guy",
+  "artist": "John Lennon",
+  "date": "2003",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/jealousguy.mp3"
+  },
+  "order": 6
+}

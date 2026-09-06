@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+
+const covers = (await getCollection("covers")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Layout title="Covers">
+  <h1>Covers</h1>
+  <ul class="cover-list">
+    {covers.map(({ data }) => (
+      <li class="cover">
+        <p class="cover-title">
+          <strong>{data.song}</strong> by {data.artist} {data.date && <span>({data.date})</span>}
+        </p>
+        {data.media.discriminant === "audio" ? (
+          <audio controls src={data.media.value} />
+        ) : data.media.value.match(/\.(mp4|webm|mov)$/i) ? (
+          <video controls src={data.media.value} />
+        ) : (
+          <a href={data.media.value} target="_blank" rel="noreferrer">{data.media.value}</a>
+        )}
+      </li>
+    ))}
+  </ul>
+</Layout>
+
+<style>
+  .cover-list { list-style: none; margin: 0; padding: 0; }
+  .cover { margin-bottom: 1.75rem; }
+  .cover-title { margin: 0 0 0.4rem; }
+</style>

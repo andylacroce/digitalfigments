@@ -1,0 +1,10 @@
+{
+  "song": "Amphetamine",
+  "artist": "Superdrag",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/Amphetamine.mp3"
+  },
+  "order": 9
+}

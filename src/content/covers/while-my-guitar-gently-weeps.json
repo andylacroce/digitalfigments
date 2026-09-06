@@ -1,0 +1,10 @@
+{
+  "song": "While My Guitar Gently Weeps",
+  "artist": "The Beatles",
+  "date": "2001",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/whilemyguitargentlyweeps.mp3"
+  },
+  "order": 3
+}

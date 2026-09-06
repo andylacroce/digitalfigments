@@ -1,0 +1,10 @@
+{
+  "song": "Angie",
+  "artist": "the Rolling Stones",
+  "date": "2000",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/angie.mp3"
+  },
+  "order": 2
+}

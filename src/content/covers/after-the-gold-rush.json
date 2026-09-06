@@ -1,0 +1,10 @@
+{
+  "song": "After the Gold Rush",
+  "artist": "Neil Young",
+  "date": "2004",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/afterthegoldrush.mp3"
+  },
+  "order": 7
+}

@@ -1,0 +1,10 @@
+{
+  "song": "Happy Xmas (War is Over)",
+  "artist": "John Lennon",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/happyxmas.mp3"
+  },
+  "order": 10
+}
