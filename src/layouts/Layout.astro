@@ -195,10 +195,7 @@ const fullTitle = `${title} · ${SITE_NAME}`;
             open(img.currentSrc || img.src, img.alt);
           });
         });
-        lightbox.addEventListener("click", function (e) {
-          if (e.target === lightbox) close();
-        });
-        document.querySelector(".lightbox-close").addEventListener("click", close);
+        lightbox.addEventListener("click", close);
         document.addEventListener("keydown", function (e) {
           if (e.key === "Escape") close();
         });
