@@ -1,9 +1,15 @@
 ---
-import { getCollection, render } from "astro:content";
+import { render } from "astro:content";
 import Layout from "../layouts/Layout.astro";
+import BackLink from "../components/BackLink.astro";
+import { siteConfig } from "../site.config";
+import { getGenericPages } from "../lib/pages";
+import { firstImagePath } from "../lib/og";
 
+// Pages served under /blog/[slug]/ instead (see src/pages/blog/[slug].astro) —
+// kept out of this generic route so there's only one URL for them.
 export async function getStaticPaths() {
-  const pages = await getCollection("pages");
+  const pages = await getGenericPages();
   return pages.map((page) => ({
     params: { slug: page.id },
     props: { page },
@@ -12,9 +18,18 @@ export async function getStaticPaths() {
 
 const { page } = Astro.props;
 const { Content } = await render(page);
+const noindex = siteConfig.unindexedPaths.includes(`/${page.id}`);
+const imagePath = firstImagePath(page.body ?? "");
+const image = imagePath ? new URL(imagePath, Astro.site).toString() : undefined;
 ---
 
-<Layout title={page.data.title}>
+<Layout
+  title={page.data.title}
+  description={`${page.data.title} — Digital Figments.`}
+  image={image}
+  noindex={noindex}
+>
   <h1>{page.data.title}</h1>
   <Content />
+  <BackLink fallback="/" label="Home" />
 </Layout>

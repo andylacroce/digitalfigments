@@ -1,0 +1,33 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import BackLink from "../../components/BackLink.astro";
+import { getBlogPages } from "../../lib/pages";
+import { formatDate } from "../../lib/format";
+
+const entries = (await getBlogPages()).sort(
+  (a, b) => (b.data.date?.valueOf() ?? 0) - (a.data.date?.valueOf() ?? 0)
+);
+---
+
+<Layout
+  title="Blog"
+  description="Standalone essays and writing on Digital Figments."
+  noindex
+>
+  <h1>Blog</h1>
+  <ul class="blog-list plain-list">
+    {entries.map((entry) => (
+      <li class="blog-entry divided-list-item">
+        <a href={`/blog/${entry.id}/`}>{entry.data.title}</a>
+        {entry.data.date && <span class="blog-date kicker">{formatDate(entry.data.date)}</span>}
+      </li>
+    ))}
+  </ul>
+  <BackLink fallback="/" label="Home" />
+</Layout>
+
+<style>
+  .blog-entry { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem; padding: 0.9rem 0; }
+  .blog-entry a { font-size: 1.05rem; font-weight: 600; }
+  .blog-date { color: var(--muted); }
+</style>

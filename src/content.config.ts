@@ -6,7 +6,6 @@ const posts = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
-    category: z.enum(["images", "video", "music", "gif", "text"]),
   }),
 });
 
@@ -28,6 +27,7 @@ const pages = defineCollection({
   loader: glob({ pattern: "**/*.mdx", base: "./src/content/pages" }),
   schema: z.object({
     title: z.string(),
+    date: z.coerce.date().optional(),
   }),
 });
 

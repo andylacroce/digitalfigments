@@ -1,0 +1,20 @@
+---
+interface Props {
+  fallback?: string;
+  label?: string;
+}
+const { fallback = "/", label = "Back" } = Astro.props;
+---
+
+<p class="back-link">
+  <a
+    href={fallback}
+    onclick="if (document.referrer && document.referrer.startsWith(location.origin) && history.length > 1) { event.preventDefault(); history.back(); }"
+  >
+    &larr; {label}
+  </a>
+</p>
+
+<style>
+  .back-link { margin-top: 2rem; }
+</style>

@@ -1,13 +1,17 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
+import BackLink from "../components/BackLink.astro";
 
 const covers = (await getCollection("covers")).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<Layout title="Covers">
+<Layout
+  title="Covers"
+  description="A song-cover archive — acoustic and home-recorded covers by Andy Lacroce."
+>
   <h1>Covers</h1>
-  <ul class="cover-list">
+  <ul class="cover-list plain-list">
     {covers.map(({ data }) => (
       <li class="cover">
         <p class="cover-title">
@@ -23,10 +27,10 @@ const covers = (await getCollection("covers")).sort((a, b) => a.data.order - b.d
       </li>
     ))}
   </ul>
+  <BackLink fallback="/" label="Home" />
 </Layout>
 
 <style>
-  .cover-list { list-style: none; margin: 0; padding: 0; }
   .cover { margin-bottom: 1.75rem; }
   .cover-title { margin: 0 0 0.4rem; }
 </style>

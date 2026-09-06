@@ -69,34 +69,41 @@ const postsDir = path.join(ROOT, "src", "content", "posts");
 fs.mkdirSync(postsDir, { recursive: true });
 fs.mkdirSync(path.join(ROOT, "src", "content", "posts", "images"), { recursive: true });
 
+// Strip a query string (e.g. Jetpack Photon's "?ssl=1") off a URL.
+function stripQuery(url) {
+  return url.split("?")[0];
+}
+
+// Extract every <img> tag's src/data-url and alt attribute regardless of
+// attribute order — Jetpack tiled-gallery blocks emit alt before src, which
+// breaks an order-dependent regex. Prefers data-url (the original-domain,
+// query-string-free URL) over src (often a Photon CDN URL with "?ssl=1").
+function extractImages(html) {
+  const tags = [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
+  return tags.map((tag) => {
+    const dataUrl = tag.match(/\bdata-url="([^"]+)"/);
+    const src = tag.match(/\bsrc="([^"]+)"/);
+    const alt = tag.match(/\balt="([^"]*)"/);
+    return { url: stripQuery((dataUrl || src)?.[1] || ""), alt: alt?.[1] || "" };
+  }).filter((img) => img.url);
+}
+
 let convertedPosts = 0;
 for (const p of posts) {
   const html = p.content;
-  let category = p.category[0];
   const bodyParts = [];
 
-  // Original image, linked via <a href> (wp:image with linkDestination:"media")
-  const imgLinked = [...html.matchAll(/<a href="([^"]+)"[^>]*><img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"/g)];
-  const imgBare = [...html.matchAll(/<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"/g)];
+  const images = extractImages(html);
   const videoTag = [...html.matchAll(/<video[^>]*src="([^"]+)"[^>]*>[\s\S]*?(?:<figcaption[^>]*>([^<]*)<\/figcaption>)?/g)];
   const audioTag = [...html.matchAll(/<audio[^>]*src="([^"]+)"/g)];
+  const audioShortcode = [...html.matchAll(/\[audio mp3="([^"]+)"\]\[\/audio\]/g)];
   const youtube = [...html.matchAll(/wp:embed[^}]*"url":"([^"]+)"[\s\S]*?is-provider-youtube/g)];
 
-  if (imgLinked.length) {
-    category = category || "images";
-    for (const [, href, , alt] of imgLinked) {
-      const local = copyMedia(toOriginal(href));
-      bodyParts.push(`![${alt || ""}](${local})`);
-    }
-  } else if (imgBare.length) {
-    category = category || "images";
-    for (const [, src, alt] of imgBare) {
-      const local = copyMedia(toOriginal(src));
-      bodyParts.push(`![${alt || ""}](${local})`);
-    }
+  for (const { url, alt } of images) {
+    const local = copyMedia(toOriginal(url));
+    bodyParts.push(`![${alt}](${local})`);
   }
   if (videoTag.length) {
-    category = category || "video";
     for (const [, src, caption] of videoTag) {
       const local = copyMedia(src);
       bodyParts.push(`<video controls src="${local}"></video>`);
@@ -104,28 +111,34 @@ for (const p of posts) {
     }
   }
   if (audioTag.length) {
-    category = category || "music";
     for (const [, src] of audioTag) {
       const local = copyMedia(src);
       bodyParts.push(`<audio controls src="${local}"></audio>`);
     }
   }
+  if (audioShortcode.length) {
+    for (const [, src] of audioShortcode) {
+      const local = copyMedia(src);
+      bodyParts.push(`<audio controls src="${local}"></audio>`);
+    }
+  }
   if (youtube.length) {
-    category = category || "video";
     for (const [, url] of youtube) {
       bodyParts.push(`<VideoEmbed url="${url}" />`);
     }
   }
-  // Fallback: any leftover paragraph text
+  // Fallback: any leftover paragraph or blockquote text
   const paragraphs = [...html.matchAll(/<p>(.*?)<\/p>/gs)].map((m) => m[1].trim()).filter(Boolean);
   for (const para of paragraphs) {
     bodyParts.push(turndown.turndown(para));
   }
-
-  if (!category) category = "text";
+  const blockquotes = [...html.matchAll(/<blockquote>(.*?)<\/blockquote>/gs)].map((m) => m[1].trim()).filter(Boolean);
+  for (const bq of blockquotes) {
+    bodyParts.push(turndown.turndown(`<blockquote>${bq}</blockquote>`));
+  }
 
   const slug = p.slug || slugify(p.title);
-  const fm = frontmatterYaml({ title: p.title, date: p.date.replace(" ", "T"), category });
+  const fm = frontmatterYaml({ title: p.title, date: p.date.replace(" ", "T") });
   const body = bodyParts.join("\n\n") + "\n";
   fs.writeFileSync(path.join(postsDir, `${slug}.mdx`), fm + body);
   convertedPosts++;
@@ -137,70 +150,48 @@ console.log(`Converted ${convertedPosts} posts -> src/content/posts/`);
 const coversDir = path.join(ROOT, "src", "content", "covers");
 fs.mkdirSync(coversDir, { recursive: true });
 const coversPage = pages.find((p) => p.slug === "covers");
-let coverOrder = 0;
-let convertedCovers = 0;
 
-// Audio blocks: <audio ... src="URL"></audio><figcaption ...>CAPTION</figcaption>
+function parseCoverCaption(caption) {
+  const m = caption.match(/^(.*?)\s+by\s+(.*?)\s+\(([^)]*)\)\s*$/i);
+  return {
+    song: m ? m[1].trim() : caption.trim(),
+    artist: m ? m[2].trim() : "",
+    date: m ? m[3].trim() : "",
+  };
+}
+
+// Each block type is matched separately, but string.matchAll() preserves each
+// match's position in the source document (`.index`) — collecting all three
+// kinds together and sorting by that position (rather than writing each type
+// in its own pass) is what keeps the on-page order matching the original.
 const audioBlocks = [...coversPage.content.matchAll(
   /<audio controls src="([^"]+)"><\/audio><figcaption[^>]*>([^<]*)<\/figcaption>/g
-)];
-for (const [, src, caption] of audioBlocks) {
-  const m = caption.match(/^(.*?)\s+by\s+(.*?)\s+\(([^)]*)\)\s*$/i);
-  const song = m ? m[1].trim() : caption.trim();
-  const artist = m ? m[2].trim() : "";
-  const date = m ? m[3].trim() : "";
-  const local = copyMedia(src);
-  const slug = slugify(song) || `cover-${coverOrder}`;
-  const data = {
-    song,
-    artist,
-    date,
-    media: { discriminant: "audio", value: local },
-    order: coverOrder++,
-  };
-  fs.writeFileSync(path.join(coversDir, `${slug}.json`), JSON.stringify(data, null, 2));
-  convertedCovers++;
-}
+)].map((m) => ({ index: m.index, kind: "audio", src: m[1], caption: m[2] }));
 
-// YouTube embed blocks inside the covers page
 const embedBlocks = [...coversPage.content.matchAll(
   /wp:embed[^}]*"url":"([^"]+)"[\s\S]*?is-provider-youtube[\s\S]*?<figcaption[^>]*>([^<]*)<\/figcaption>/g
-)];
-for (const [, url, caption] of embedBlocks) {
-  const m = caption.match(/^(.*?)\s+by\s+(.*?)\s+\(([^)]*)\)\s*$/i);
-  const song = m ? m[1].trim() : caption.trim();
-  const artist = m ? m[2].trim() : "";
-  const date = m ? m[3].trim() : "";
-  const slug = slugify(song) || `cover-${coverOrder}`;
-  const data = {
-    song,
-    artist,
-    date,
-    media: { discriminant: "embed", value: url },
-    order: coverOrder++,
-  };
-  fs.writeFileSync(path.join(coversDir, `${slug}.json`), JSON.stringify(data, null, 2));
-  convertedCovers++;
-}
+)].map((m) => ({ index: m.index, kind: "embed", url: m[1], caption: m[2] }));
 
-// video block (Tiny Dancer, native mp4) inside the covers page
 const videoBlocksInCovers = [...coversPage.content.matchAll(
   /<video[^>]*src="([^"]+)"><\/video><figcaption[^>]*>([^<]*)<\/figcaption>/g
-)];
-for (const [, src, caption] of videoBlocksInCovers) {
-  const m = caption.match(/^(.*?)\s+by\s+(.*?)\s+\(([^)]*)\)\s*$/i);
-  const song = m ? m[1].trim() : caption.trim();
-  const artist = m ? m[2].trim() : "";
-  const date = m ? m[3].trim() : "";
-  const local = copyMedia(src);
+)].map((m) => ({ index: m.index, kind: "video", src: m[1], caption: m[2] }));
+
+const allCoverBlocks = [...audioBlocks, ...embedBlocks, ...videoBlocksInCovers].sort(
+  (a, b) => a.index - b.index
+);
+
+let coverOrder = 0;
+let convertedCovers = 0;
+for (const block of allCoverBlocks) {
+  const { song, artist, date } = parseCoverCaption(block.caption);
   const slug = slugify(song) || `cover-${coverOrder}`;
-  const data = {
-    song,
-    artist,
-    date,
-    media: { discriminant: "embed", value: local },
-    order: coverOrder++,
-  };
+  const media =
+    block.kind === "audio"
+      ? { discriminant: "audio", value: copyMedia(block.src) }
+      : block.kind === "video"
+      ? { discriminant: "embed", value: copyMedia(block.src) }
+      : { discriminant: "embed", value: block.url };
+  const data = { song, artist, date, media, order: coverOrder++ };
   fs.writeFileSync(path.join(coversDir, `${slug}.json`), JSON.stringify(data, null, 2));
   convertedCovers++;
 }

@@ -1,0 +1,31 @@
+---
+import { render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import BackLink from "../../components/BackLink.astro";
+import { getBlogPages } from "../../lib/pages";
+
+// Standalone essay-like pages that don't fit the photo-blog nav or framing —
+// unexposed like /music/, reachable only by direct URL.
+export async function getStaticPaths() {
+  const pages = await getBlogPages();
+  return pages.map((page) => ({
+    params: { slug: page.id },
+    props: { page },
+  }));
+}
+
+const { page } = Astro.props;
+const { Content } = await render(page);
+---
+
+<Layout
+  title={page.data.title}
+  description={`${page.data.title} — Digital Figments.`}
+  type="article"
+  publishedTime={page.data.date}
+  noindex
+>
+  <h1>{page.data.title}</h1>
+  <Content />
+  <BackLink fallback="/blog/" label="Blog" />
+</Layout>

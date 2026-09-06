@@ -1,8 +1,30 @@
 ---
+import '../styles/global.css';
+
+const SITE_NAME = "Digital Figments";
+const DEFAULT_DESCRIPTION =
+  "Photos, doodles, videos, and song covers — a personal media blog by Andy Lacroce.";
+
 interface Props {
   title: string;
+  description?: string;
+  /** Absolute URL — build with new URL(path, Astro.site) in the calling page. */
+  image?: string;
+  type?: "website" | "article";
+  noindex?: boolean;
+  publishedTime?: Date;
 }
-const { title } = Astro.props;
+const {
+  title,
+  description = DEFAULT_DESCRIPTION,
+  image,
+  type = "website",
+  noindex = false,
+  publishedTime,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const fullTitle = `${title} · ${SITE_NAME}`;
 ---
 
 <html lang="en">
@@ -11,76 +33,176 @@ const { title } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} · Digital Figments</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        --fg: #1a1a1a;
-        --bg: #fdfdfb;
-        --muted: #6b6b6b;
-        --accent: #3a6b5a;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --fg: #eaeaea;
-          --bg: #14161a;
-          --muted: #9a9a9a;
-          --accent: #7fbfa6;
-        }
-      }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--fg);
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        line-height: 1.6;
-      }
-      header {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.25rem;
-        align-items: baseline;
-        max-width: 780px;
-        margin: 0 auto;
-        padding: 2rem 1.25rem 1rem;
-      }
-      header a.brand {
-        font-weight: 700;
-        font-size: 1.25rem;
-        color: var(--fg);
-        text-decoration: none;
-      }
-      nav { display: flex; gap: 1rem; flex-wrap: wrap; }
-      nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; }
-      nav a:hover { color: var(--accent); }
-      main { max-width: 780px; margin: 0 auto; padding: 0 1.25rem 4rem; }
-      img, video { max-width: 100%; border-radius: 8px; }
-      audio { width: 100%; }
-      footer {
-        max-width: 780px;
-        margin: 0 auto;
-        padding: 2rem 1.25rem 3rem;
-        color: var(--muted);
-        font-size: 0.85rem;
-      }
-      a { color: var(--accent); }
-    </style>
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    {image && <meta property="og:image" content={image} />}
+    {type === "article" && publishedTime && (
+      <meta property="article:published_time" content={publishedTime.toISOString()} />
+    )}
+
+    <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {image && <meta name="twitter:image" content={image} />}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      (function () {
+        var stored = localStorage.getItem("theme");
+        if (stored) document.documentElement.setAttribute("data-theme", stored);
+      })();
+    </script>
   </head>
   <body>
     <header>
-      <a class="brand" href="/">Digital Figments</a>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/music/">Music</a>
-        <a href="/donate/">Donate</a>
-      </nav>
+      <div class="header-inner">
+        <a class="brand" href="/">Digital Figments</a>
+        <div class="header-actions">
+          <button id="back-to-top" type="button" class="back-to-top" hidden>&uarr; Top</button>
+          <button id="theme-toggle" type="button" aria-label="Toggle light and dark mode">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+          </button>
+        </div>
+      </div>
     </header>
     <main>
       <slot />
     </main>
     <footer>
-      <p>&copy; {new Date().getFullYear()} Andy Lacroce</p>
+      <p>Curated by Andy Lacroce</p>
     </footer>
+    <div id="lightbox" class="lightbox" hidden>
+      <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
+      <img id="lightbox-img" alt="" />
+    </div>
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        document.getElementById("theme-toggle").addEventListener("click", function () {
+          var current =
+            root.getAttribute("data-theme") ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          var next = current === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          localStorage.setItem("theme", next);
+        });
+      })();
+
+      // Show a "Back to top" button once the page has scrolled a bit.
+      // Uses its own short, eased animation rather than native smooth-scroll,
+      // which on a long page can feel sluggish and varies by browser.
+      (function () {
+        var btn = document.getElementById("back-to-top");
+        function onScroll() {
+          btn.hidden = window.scrollY < 400;
+        }
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+
+        // This is a short, user-initiated scroll with a fixed endpoint (not
+        // ambient/decorative motion), so it always animates — unlike the
+        // fade-in/hover effects elsewhere, which do respect reduced-motion.
+        btn.addEventListener("click", function () {
+          // CSS sets `scroll-behavior: smooth` on <html> (for anchor jumps),
+          // but that also intercepts plain scrollTo() calls — including each
+          // frame of the animation below — turning them into overlapping
+          // native smooth-scrolls instead of the instant per-frame jumps this
+          // needs. Overriding via inline style (higher specificity than the
+          // stylesheet rule) for the duration of the animation fixes it.
+          var htmlEl = document.documentElement;
+          var prevScrollBehavior = htmlEl.style.scrollBehavior;
+          htmlEl.style.scrollBehavior = "auto";
+
+          function restore() {
+            htmlEl.style.scrollBehavior = prevScrollBehavior;
+          }
+
+          var startY = window.scrollY;
+          var startTime = null;
+          var duration = 350;
+          function step(now) {
+            if (startTime === null) startTime = now;
+            var t = Math.min((now - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            window.scrollTo(0, startY * (1 - eased));
+            if (t < 1) {
+              requestAnimationFrame(step);
+            } else {
+              restore();
+            }
+          }
+          requestAnimationFrame(step);
+        });
+      })();
+
+      // Group 2+ consecutive standalone images per post into a tiled grid.
+      (function () {
+        document.querySelectorAll("article, .post-body").forEach(function (container) {
+          var items = Array.prototype.filter.call(container.children, function (el) {
+            return (
+              el.tagName === "P" &&
+              el.children.length === 1 &&
+              el.children[0].tagName === "IMG" &&
+              el.textContent.trim() === ""
+            );
+          });
+          if (items.length >= 2) {
+            container.classList.add("gallery");
+            items.forEach(function (el) {
+              el.classList.add("gallery-item");
+            });
+          }
+        });
+      })();
+
+      // Click any post image to view it enlarged.
+      (function () {
+        var lightbox = document.getElementById("lightbox");
+        var lightboxImg = document.getElementById("lightbox-img");
+
+        function open(src, alt) {
+          lightboxImg.src = src;
+          lightboxImg.alt = alt || "";
+          lightbox.hidden = false;
+          requestAnimationFrame(function () {
+            lightbox.classList.add("is-open");
+          });
+        }
+        function close() {
+          lightbox.classList.remove("is-open");
+          setTimeout(function () {
+            lightbox.hidden = true;
+            lightboxImg.src = "";
+          }, 150);
+        }
+
+        document.querySelectorAll("main img").forEach(function (img) {
+          img.addEventListener("click", function () {
+            open(img.currentSrc || img.src, img.alt);
+          });
+        });
+        lightbox.addEventListener("click", function (e) {
+          if (e.target === lightbox) close();
+        });
+        document.querySelector(".lightbox-close").addEventListener("click", close);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") close();
+        });
+      })();
+    </script>
   </body>
 </html>

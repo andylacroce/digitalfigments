@@ -61,13 +61,19 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
 
 - **`job-stuff` page**: only ever contained a dead Voiceflow chatbot embed script,
   no real content. Migrated as-is (wrapped in a code block so it doesn't break the
-  MDX build) but this is a strong candidate to just delete.
+  MDX build) but this is a strong candidate to just delete. Still undecided —
+  still built and reachable by direct URL, not linked from nav.
 - **`obamas-audacity` page**: a genuine personal essay, not photo/media content —
-  kept, but doesn't fit the nav or the "media blog" framing. Decide whether it
-  becomes a regular post, stays a standalone page, or gets dropped from nav.
-- Nav currently only links to Home / Music / Donate — `job-stuff`,
-  `obamas-audacity`, and `privacy-policy` are built and reachable by direct URL
-  but not linked from anywhere. Intentional pending the calls above.
+  kept, but doesn't fit the nav or the "media blog" framing. Still undecided
+  whether it becomes a regular post, stays a standalone page, or gets dropped
+  from nav. Still built and reachable by direct URL, not linked from nav.
+- ~~Nav currently only links to Home / Music / Donate~~ — resolved this session:
+  **`donate` page deleted outright** (its content was just a personal list of
+  charity links), and **`music` is intentionally unlinked from nav but still
+  live** at `/music/`. Nav is now just the brand wordmark (linking home) plus
+  the theme toggle and a scroll-triggered "back to top" button —
+  `privacy-policy`, `job-stuff`, `obamas-audacity` remain reachable only by
+  direct URL pending the calls above.
 
 ## Known rough edges / not yet done
 
@@ -97,8 +103,11 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
    the andylacroce.com → digitalfigments.com URL history; that mapping needs to be
    exported and turned into Vercel redirects (`vercel.json`) before cutover, or
    old links will 404.
-5. **No visual design pass.** Templates are intentionally plain right now —
-   layout/typography/spacing has had no real design attention yet.
+5. ~~No visual design pass.~~ Done this session — see below. A real, opinionated
+   look now exists (earthy/retro palette, display font, tiled photo galleries,
+   lightbox, dark mode). Still open: no design pass on the `covers`/`music`/
+   `demos`/`a2z`/`obamas-audacity`/`privacy-policy` page templates specifically
+   (they inherit the global look but haven't been individually reviewed).
 6. **`old-site/`** is served as static files but not linked from anywhere in the
    new nav — decide if/where it should be discoverable.
 7. **Git LFS is enabled** (`.gitattributes`) for `*.zip .mp4 .mp3 .m4a .wav .mov .mid`
@@ -107,10 +116,103 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
    Vercel needs LFS objects fetched during build — confirm the Vercel project has
    "Enable Git LFS" turned on when it's created, or the build will only see
    pointer files instead of real media.
-8. Two content posts had no WP category (`Im Mai`, `Sunnin'`, `Blue Heaven
-   Butterfly Bush`, `Floating`) and were defaulted to `images` by the migration
-   script based on their content (all four are image posts) — verify this is
-   correct.
+8. ~~Two content posts had no WP category...~~ Moot — categories were dropped
+   entirely (see below).
+
+## Session updates (2026-09-06)
+
+- **Keystatic admin UI verified working** end to end via `npm run dev` →
+  `/keystatic`: all three collections (posts, covers, pages) load with their
+  full entry lists, schema fields render correctly (including the covers
+  conditional audio/embed field), and a real edit-and-save round-trip was
+  tested on `privacy-policy.mdx` — Keystatic writes valid MDX back to disk
+  with correct escaping. One cosmetic rough edge: the posts `date` field is
+  stored as a full ISO datetime (`2018-06-03T12:35:39`) but Keystatic's date
+  picker expects `yyyy-MM-dd`, which throws a harmless console warning in the
+  admin UI — not fixed yet.
+- **Post categories/tags removed entirely** (was `images`/`video`/`music`/
+  `gif`/`text` per post) — dropped from `keystatic.config.ts`,
+  `src/content.config.ts`, the post templates (`index.astro`,
+  `posts/[slug].astro`), all 36 post `.mdx` files, and
+  `scripts/migrate-wp-content.mjs` so re-running the migration won't
+  reintroduce it.
+- **Fixed a real CSS bug**: `Layout.astro`'s scoped `<style>` never applied to
+  post/page content rendered via `<Content />`/`<slot />` (Astro only scopes
+  elements written literally in the defining file), so images in posts were
+  rendering at native size with no styling at all. Moved all site CSS out of
+  `Layout.astro` into `src/styles/global.css` (a plain, unscoped stylesheet
+  imported in the layout) — fixes the bug and makes the CSS easier to
+  maintain in one place. No visual design pass has happened beyond this fix;
+  item 5 below still stands.
+
+## Session updates, part 2 (2026-09-06, design + content-bug pass)
+
+- **Fixed 4 posts that were rendering completely blank**: `serenity`,
+  `more-autumn-magic`, `samvega`, and the Johnny Appleseed cover. Root cause
+  was in `scripts/migrate-wp-content.mjs` — its image-extraction regex assumed
+  `src` always came before `alt` in an `<img>` tag, but Jetpack's tiled-gallery
+  blocks (used by these 3 posts) emit `alt` first, so nothing matched; the 4th
+  post used an old-style `[audio mp3="..."][/audio]` shortcode the script
+  didn't recognize at all. Both bugs are fixed in the shared script (order-
+  independent attribute parsing, shortcode support, blockquote fallback), and
+  the 4 affected posts were regenerated from the original WP export — Samvega
+  now has 18 images, More Autumn Magic 15, Serenity 2, and the Johnny
+  Appleseed post has its audio player and lyric blockquote back.
+- **Fixed cover-song ordering on `/covers/`**: the migration script assigned
+  the `order` field in three separate passes (all audio entries first, then
+  all YouTube embeds, then all native-video entries), so anything not
+  audio — the embedded "Suzanne" cover and the "Tiny Dancer" video — got
+  pushed to the end instead of appearing where they actually sat on the old
+  WordPress page. Fixed by collecting all three block types with their true
+  position in the source document and sorting by that before assigning
+  order; the 32 `covers/*.json` files were regenerated with correct order
+  values.
+- **Categories/tags removed entirely** from posts (was `images`/`video`/
+  `music`/`gif`/`text`) — dropped from both schemas, both templates, all 36
+  post files, and the migration script.
+- **`donate` page deleted** (full removal — content was just a personal list
+  of charity links, not migration-relevant). **`music` unlinked from nav**
+  but still live at `/music/`.
+- **Real visual design pass** (previously fully unstyled/default):
+  - Display serif (Fraunces, via Google Fonts) for headings/brand, system-ui
+    body text.
+  - Earthy, natural two-tone accent palette — terracotta + sage green — with
+    separate light/dark variants (`src/styles/global.css` `:root` custom
+    properties), plus a manual light/dark toggle in the header (persisted to
+    `localStorage`, defaults to OS preference via `prefers-color-scheme`).
+  - Sticky header with a solid accent bottom border; a "back to top" button
+    that appears after scrolling ~400px and animates back up with a fast
+    (350ms) custom eased scroll rather than relying on native smooth-scroll.
+  - Posts with 2+ standalone images are auto-detected client-side and laid
+    out as a tiled photo grid (`.gallery`/`.gallery-item`, replacing what were
+    Jetpack tiled-gallery blocks on the old WP site); every post image is
+    click-to-enlarge via a small lightbox (no dependency — vanilla JS/CSS).
+  - Fixed the actual "images render huge with no styling" bug: `Layout.astro`'s
+    old scoped `<style>` never reached content injected via `<Content />`/
+    `<slot />` (Astro only scopes elements written literally in the defining
+    file) — CSS now lives in `src/styles/global.css`, a plain unscoped
+    stylesheet, plus `max-height: 80vh` so tall portrait phone photos don't
+    dominate the viewport.
+  - Home feed is now paginated (`src/pages/[...page].astro`, replacing the old
+    unpaginated `index.astro`), 10 posts per page.
+  - Subtle entrance-fade animations on post cards and single-post articles,
+    all gated behind `prefers-reduced-motion`.
+  - Responsive pass for phones: tighter header/main padding, smaller gallery
+    tiles, adjusted heading sizes under a 480px breakpoint.
+- **Performance**: a small rehype plugin in `astro.config.mjs` adds
+  `loading="lazy" decoding="async"` to every MDX-rendered `<img>` at compile
+  time (applies uniformly rather than per-post — deliberate tradeoff, see the
+  comment in that file). Added `vercel.json` with 1-year immutable
+  `Cache-Control` headers for `/media/`, `/posts-media/`, `/covers-audio/`,
+  and `/old-site/` — worth knowing: because these paths aren't
+  content-hashed, overwriting a file at the same path (e.g. re-uploading
+  through Keystatic with an identical filename) could serve a stale cached
+  copy for up to a year in browsers/CDN that already fetched it.
+- Note: **the local dev server needs a restart to notice new files added
+  under `public/`** after it's already running (e.g. media copied in by the
+  migration script mid-session) — a plain browser refresh isn't enough and
+  will 404. Not an issue for a fresh `npm run dev` or for the production
+  build/deploy.
 
 ## Explicitly NOT done (requires your final approval first)
 

@@ -1,6 +1,9 @@
 ---
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import BackLink from "../../components/BackLink.astro";
+import { formatDate } from "../../lib/format";
+import { firstImagePath } from "../../lib/og";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -12,20 +15,27 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const formattedDate = formatDate(post.data.date);
+const description = `${post.data.title} — posted ${formattedDate} on Digital Figments.`;
+const imagePath = firstImagePath(post.body ?? "");
+const image = imagePath ? new URL(imagePath, Astro.site).toString() : undefined;
 ---
 
-<Layout title={post.data.title}>
+<Layout
+  title={post.data.title}
+  description={description}
+  image={image}
+  type="article"
+  publishedTime={post.data.date}
+>
   <article>
     <h1>{post.data.title}</h1>
-    <p class="post-meta">
-      {post.data.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-      {" · "}{post.data.category}
-    </p>
+    <p class="post-meta kicker">{formattedDate}</p>
     <Content />
   </article>
-  <p><a href="/">&larr; Back to all posts</a></p>
+  <BackLink fallback="/" label="All posts" />
 </Layout>
 
 <style>
-  .post-meta { color: var(--muted); font-size: 0.85rem; text-transform: capitalize; margin-top: -0.5rem; }
+  .post-meta { color: var(--accent-2); margin: 0 0 1.75rem; }
 </style>

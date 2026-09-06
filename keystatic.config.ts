@@ -16,17 +16,6 @@ export default config({
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         date: fields.date({ label: 'Date', defaultValue: { kind: 'today' } }),
-        category: fields.select({
-          label: 'Category',
-          options: [
-            { label: 'Images', value: 'images' },
-            { label: 'Video', value: 'video' },
-            { label: 'Music', value: 'music' },
-            { label: 'GIF', value: 'gif' },
-            { label: 'Text', value: 'text' },
-          ],
-          defaultValue: 'images',
-        }),
         body: fields.mdx({
           label: 'Content',
           options: {
@@ -82,6 +71,11 @@ export default config({
       format: { contentField: 'body' },
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
+        date: fields.date({
+          label: 'Date',
+          description: 'Only used to order entries on /blog — leave blank for pages that aren\'t part of that section.',
+          validation: { isRequired: false },
+        }),
         body: fields.mdx({ label: 'Content' }),
       },
     }),

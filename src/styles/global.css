@@ -1,0 +1,332 @@
+:root {
+  color-scheme: light dark;
+  --fg: #26211a;
+  --bg: #faf6ee;
+  --muted: #6f6355;
+  --accent: #b5541f;
+  --accent-2: #4d6b4f;
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fg: #f1ece0;
+    --bg: #181510;
+    --muted: #a89a86;
+    --accent: #e08a5b;
+    --accent-2: #8fae7c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fg: #f1ece0;
+  --bg: #181510;
+  --muted: #a89a86;
+  --accent: #e08a5b;
+  --accent-2: #8fae7c;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --fg: #26211a;
+  --bg: #faf6ee;
+  --muted: #6f6355;
+  --accent: #b5541f;
+  --accent-2: #4d6b4f;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  border-bottom: 4px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+}
+header a.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  animation: fadeUp 0.2s ease both;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.back-to-top[hidden] { display: none; }
+.back-to-top:hover { background: var(--accent); color: var(--bg); transform: translateY(-1px); }
+
+#theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 2px solid var(--accent-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+#theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: rotate(-12deg) scale(1.08);
+}
+#theme-toggle svg { width: 1.2rem; height: 1.2rem; }
+/* Icon shown = the mode a click switches TO, not the current mode: moon
+   ("go dark") while in light mode, sun ("go light") while in dark mode. */
+#theme-toggle .icon-sun { display: none; }
+
+/* Default (no explicit choice): follow the OS. */
+@media (prefers-color-scheme: dark) {
+  #theme-toggle .icon-sun { display: block; }
+  #theme-toggle .icon-moon { display: none; }
+}
+/* Explicit choice via the toggle overrides the OS default either way. */
+:root[data-theme="dark"] #theme-toggle .icon-sun { display: block; }
+:root[data-theme="dark"] #theme-toggle .icon-moon { display: none; }
+:root[data-theme="light"] #theme-toggle .icon-sun { display: none; }
+:root[data-theme="light"] #theme-toggle .icon-moon { display: block; }
+
+main { max-width: 780px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+
+footer {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  color: var(--accent-2);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+a { color: var(--accent); text-decoration-color: var(--accent-2); text-decoration-thickness: 2px; }
+a:hover { color: var(--accent-2); }
+
+/* Content rendered via <Content />/<slot /> (MDX bodies) isn't reached by
+   Astro's per-component scoped styles, so base prose/media rules for post
+   and page content live here instead, in a plain (unscoped) stylesheet. */
+main img,
+main video {
+  max-width: 100%;
+  max-height: 80vh;
+  width: auto;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+  border: 4px solid var(--bg);
+  outline: 3px solid var(--accent-2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  /* Left-aligned (not centered) so a single post photo lines up with the
+     text column's left edge the same way gallery tiles do. */
+  margin: 0 0 1.5rem;
+  transition: transform 0.15s ease, outline-color 0.15s ease;
+}
+main img:hover, main video:hover {
+  transform: translateY(-2px);
+  outline-color: var(--accent);
+}
+main audio { width: 100%; accent-color: var(--accent); }
+main p { margin: 0 0 1.25rem; }
+main h1 {
+  font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.5rem);
+  line-height: 1.15;
+  margin: 0 0 0.35rem;
+  color: var(--fg);
+}
+main h2, main h3, main h4, main h5, main h6 {
+  line-height: 1.25;
+  margin: 2rem 0 1rem;
+  color: var(--fg);
+}
+main blockquote {
+  margin: 0 0 1.25rem;
+  padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 4px solid var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 10%, transparent);
+  color: var(--fg);
+  font-style: italic;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Posts with 2+ standalone images get tiled into a grid — JS adds .gallery
+   to the container and .gallery-item to each qualifying <p> (see the inline
+   script in Layout.astro). Non-image siblings (title, date, body text) span
+   the full grid width so they aren't squeezed into a column. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+.gallery > *:not(.gallery-item) {
+  grid-column: 1 / -1;
+}
+.gallery-item {
+  margin: 0;
+}
+.gallery-item img {
+  max-width: 100%;
+  max-height: none;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  margin: 0;
+  border-width: 3px;
+  outline-width: 2px;
+}
+.gallery-item:nth-child(odd) img { outline-color: var(--accent); }
+.gallery-item:nth-child(even) img { outline-color: var(--accent-2); }
+.gallery-item img:hover { transform: scale(1.04) translateY(0); }
+
+main img, main video { cursor: zoom-in; }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: rgba(10, 0, 20, 0.9);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.lightbox.is-open { opacity: 1; }
+.lightbox[hidden] { display: none; }
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+  border: 4px solid #fff;
+  outline: none;
+  box-shadow: 0 0 40px rgba(181, 84, 31, 0.35);
+  cursor: default;
+  margin: 0;
+  transform: scale(0.96);
+  transition: transform 0.15s ease;
+}
+.lightbox.is-open img { transform: scale(1); }
+.lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+.lightbox-close:hover { color: var(--accent); }
+
+/* Home feed + single post entrance */
+.post { animation: fadeUp 0.5s ease both; }
+.post:nth-child(1) { animation-delay: 0s; }
+.post:nth-child(2) { animation-delay: 0.05s; }
+.post:nth-child(3) { animation-delay: 0.1s; }
+.post:nth-child(4) { animation-delay: 0.15s; }
+.post:nth-child(n+5) { animation-delay: 0.2s; }
+article { animation: fadeUp 0.4s ease both; }
+
+/* A block's last child keeps its own bottom margin even inside a parent that
+   already adds space after — without this, list items with trailing media
+   (an image/gallery as the last thing in a post) stack that media's own
+   margin-bottom on top of the list item's spacing, producing an oversized gap. */
+.post-body > :last-child,
+article > :last-child {
+  margin-bottom: 0;
+}
+
+/* Shared list resets/patterns (home feed, blog index, covers archive) */
+.plain-list { list-style: none; margin: 0; padding: 0; }
+
+.divided-list-item {
+  border-bottom: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+}
+.divided-list-item:last-child { border-bottom: none; }
+
+/* Small uppercase "kicker" label — post dates, blog-index dates, etc. */
+.kicker {
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 480px) {
+  .header-inner { padding: 0.75rem 1rem; gap: 0.75rem; }
+  header a.brand { font-size: 1.25rem; }
+  main { padding: 0 1rem 3rem; }
+  footer { padding: 1.5rem 1rem 2rem; }
+  main h1 { font-size: 1.6rem; }
+  .gallery { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 0.4rem; }
+  .gallery-item img { height: 150px; }
+  .lightbox { padding: 1.25rem 0.75rem; }
+  .lightbox-close { top: 0.5rem; right: 0.75rem; }
+}

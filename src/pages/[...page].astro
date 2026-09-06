@@ -1,0 +1,64 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import { formatDate } from "../lib/format";
+
+export async function getStaticPaths({ paginate }) {
+  const posts = (await getCollection("posts")).sort(
+    (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+  );
+  return paginate(posts, { pageSize: 10 });
+}
+
+const { page } = Astro.props;
+const rendered = await Promise.all(page.data.map((p) => render(p)));
+const description =
+  page.currentPage === 1
+    ? undefined
+    : `Page ${page.currentPage} of the photo/video archive on Digital Figments.`;
+---
+
+<Layout
+  title={page.currentPage === 1 ? "Home" : `Home · Page ${page.currentPage}`}
+  description={description}
+>
+  <ul class="post-list plain-list">
+    {page.data.map((post, i) => {
+      const { Content } = rendered[i];
+      return (
+        <li class="post divided-list-item">
+          <a class="post-title" href={`/posts/${post.id}/`}>
+            <h2>{post.data.title}</h2>
+          </a>
+          <p class="post-meta kicker">{formatDate(post.data.date)}</p>
+          <div class="post-body">
+            <Content />
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+  <nav class="pagination">
+    {page.url.prev ? <a href={page.url.prev}>&larr; Newer</a> : <span />}
+    <span class="pagination-status">Page {page.currentPage} of {page.lastPage}</span>
+    {page.url.next ? <a href={page.url.next}>Older &rarr;</a> : <span />}
+  </nav>
+</Layout>
+
+<style>
+  .post { margin-bottom: 2rem; padding-bottom: 1.5rem; }
+  .post-title { text-decoration: none; color: inherit; }
+  .post-title h2 { margin: 0 0 0.35rem; font-size: 1.4rem; }
+  .post-title:hover h2 { color: var(--accent); }
+  .post-meta { margin: 0 0 1.25rem; color: var(--accent-2); }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
+  }
+  .pagination a { text-decoration: none; font-size: 0.9rem; font-weight: 600; color: var(--accent); }
+  .pagination-status { color: var(--muted); font-size: 0.85rem; }
+</style>
