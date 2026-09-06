@@ -95,10 +95,18 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
    doing once the admin UI itself has been opened and verified against real edits.
    **Next session should open `npm run dev` → `/keystatic` and confirm each
    collection (posts, covers, pages) loads and saves correctly before trusting it.**
-3. **No Vercel project created yet.** Nothing has been deployed anywhere. Next
-   step is `vercel link` / `vercel --prod` (or connect the GitHub repo in the
-   Vercel dashboard) to get a preview URL — deploy to preview only, not
-   production, until final approval.
+3. ~~No Vercel project created yet.~~ Done this session — `vercel link` created
+   project `digitalfigments` (org/team `andylacroces-projects`) and connected
+   the GitHub repo, then `vercel deploy` shipped it live at
+   **https://digitalfigments.vercel.app**. Note: Vercel auto-assigns a brand
+   new project's *first* deployment to "production" internally (its own
+   platform quirk, not something `--prod` triggered) — this only affects that
+   `.vercel.app` alias since no custom domain has ever been attached to the
+   project (`domains: []`); digitalfigments.com and the WordPress box are
+   untouched. If you don't see the Vercel app listed under the repo on
+   GitHub's side, the Vercel GitHub App may be installed with "only select
+   repositories" access — add this repo via GitHub → Settings → Applications
+   → Vercel → Configure.
 4. **URL redirects not yet built.** The old WP site's `Redirection` plugin holds
    the andylacroce.com → digitalfigments.com URL history; that mapping needs to be
    exported and turned into Vercel redirects (`vercel.json`) before cutover, or
@@ -113,9 +121,9 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
 7. **Git LFS is enabled** (`.gitattributes`) for `*.zip .mp4 .mp3 .m4a .wav .mov .mid`
    — audio/video/the a2z zip total ~419MB, which is under GitHub's free 1GB LFS
    storage quota today but worth watching if more audio/video content gets added.
-   Vercel needs LFS objects fetched during build — confirm the Vercel project has
-   "Enable Git LFS" turned on when it's created, or the build will only see
-   pointer files instead of real media.
+   ~~Vercel needs LFS objects fetched during build...~~ Confirmed working this
+   session with no extra setup — verified an LFS-tracked audio file serves its
+   real ~4.3MB content (not a pointer file) from the live deployment.
 8. ~~Two content posts had no WP category...~~ Moot — categories were dropped
    entirely (see below).
 
@@ -213,6 +221,66 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   migration script mid-session) — a plain browser refresh isn't enough and
   will 404. Not an issue for a fresh `npm run dev` or for the production
   build/deploy.
+
+## Session updates, part 3 (2026-09-06, DRY pass + SEO + first deployment)
+
+- **DRY pass**: extracted `formatDate()` (`src/lib/format.ts`, was duplicated
+  3x), a shared `getGenericPages()`/`getBlogPages()` pair (`src/lib/pages.ts`,
+  replaces near-identical `getStaticPaths` filtering in `[slug].astro` and
+  `blog/[slug].astro`), and CSS utility classes (`.plain-list`,
+  `.divided-list-item`, `.kicker`) replacing several copy-pasted `<style>`
+  blocks across `[...page].astro`, `posts/[slug].astro`, `blog/index.astro`,
+  `covers.astro`.
+- **Fixed a real spacing bug**: the home feed's `.post` items had
+  `margin-bottom` *and* `padding-bottom` stacking with each post's own
+  trailing-element margin (an image's `margin-bottom` sitting inside the next
+  post's padding), producing ~120px gaps between single-image posts. Tightened
+  the list rhythm and added a rule zeroing a post's last child's own margin.
+- **Dynamic back links**: every content page (`posts/[slug]`, `[slug]`,
+  `blog/[slug]`, `blog/index`, `covers`) now has a `BackLink` component that
+  uses `history.back()` when the visit came from elsewhere on this same site
+  (checked via `document.referrer`, not just `history.length` — an earlier
+  version of this using only `history.length > 1` had a false positive in
+  automated testing), falling back to a fixed href otherwise.
+- **`/blog` section**: `obamas-audacity` moved from `/obamas-audacity/` to
+  `/blog/obamas-audacity/` (old URL now 404s), plus a new `/blog/` index
+  listing entries by date descending. Added an optional `date` field to the
+  `pages` schema for this (only `obamas-audacity` has one so far — looked up
+  its real WP publish date, 2026-02-07, via a **read-only** SQL query against
+  the live WordPress database, since the page export JSON didn't capture
+  dates. No writes were made to the WP database or site.).
+- **`src/site.config.ts`**: single source of truth for which routes are
+  "unexposed" (`/blog`, `/music`) — drives `robots.txt` (now generated
+  dynamically at `src/pages/robots.txt.ts` instead of a static file), each
+  page's `<meta name="robots">` tag, and the `/blog` vs generic `/[slug]`
+  route split, so those three can't drift out of sync.
+- **SEO pass**: meta description, Open Graph + Twitter Card tags, canonical
+  URLs, and `sitemap.xml` (via `@astrojs/sitemap`, filtered to exclude the
+  unexposed routes) added to every page (`Layout.astro`). Per-post OG image
+  is best-effort — pulled from the first markdown image in the post's raw
+  MDX body (`src/lib/og.ts`); posts/pages with no image just omit the image
+  tags (valid, falls back to a plain "summary" Twitter card).
+- Theme-toggle icon convention flipped: the icon shown now represents the
+  mode a click switches *to* (moon while in light mode, sun while in dark
+  mode), not the current mode — matches the more common convention.
+- **`npm install @astrojs/sitemap`** surfaced 3 pre-existing high-severity
+  `npm audit` findings in `@astrojs/vercel`'s dependency chain
+  (`path-to-regexp` ReDoS, via `@vercel/routing-utils`) — pre-existing, not
+  introduced this session, and the only fix is a semver-major bump of
+  `@astrojs/vercel` to 8.0.4, which wasn't attempted (untested, out of scope
+  for this session). Worth a dedicated pass before cutover.
+- **First deployment**: `vercel link` created the Vercel project
+  `digitalfigments` and connected the GitHub repo; `vercel deploy` shipped it
+  live at **https://digitalfigments.vercel.app** (confirmed working: home
+  page, `/blog/`, `/robots.txt`, `/sitemap-index.xml`, and — the thing
+  flagged as a risk since the start — a Git-LFS-tracked audio file serving
+  its real ~4.3MB content, not a pointer file, with zero extra Vercel
+  configuration needed). GitHub's Deployments API confirms the
+  `vercel[bot]` integration is genuinely posting deployment statuses against
+  commits (there can be a short UI propagation delay before it's visible on
+  github.com). **No custom domain is attached to the project and no DNS was
+  touched** — digitalfigments.com and the WordPress box are completely
+  unaffected by this.
 
 ## Explicitly NOT done (requires your final approval first)
 
