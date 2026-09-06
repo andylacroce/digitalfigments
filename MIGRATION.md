@@ -1,8 +1,16 @@
 # Migrating off WordPress — status
 
-Source: `D:\wordpress` (self-hosted WordPress/IIS on the local desktop, serving
-digitalfigments.com in production). Goal: get production off that box entirely.
-**No DNS or production cutover has happened. The live site is untouched.**
+Source: `D:\wordpress` (self-hosted WordPress/IIS on the local desktop, formerly
+serving digitalfigments.com in production).
+
+**DNS cutover happened 2026-09-06.** `digitalfigments.com` and `www` now point
+to Vercel (`76.76.21.21`, DNS-only/unproxied — see "Session updates, part 4"
+below for why proxied mode didn't work) instead of the WordPress box
+(`73.198.117.200`). Confirmed live: apex + www both serve the new Astro site
+over HTTPS, `robots.txt` correct. **No redirects were built from the old WP
+`Redirection` plugin data — explicitly accepted, some traffic/links may 404.**
+The WordPress/IIS box itself has not been touched or decommissioned; it's just
+no longer receiving traffic for this domain.
 
 ## Decision
 
@@ -282,8 +290,54 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   touched** — digitalfigments.com and the WordPress box are completely
   unaffected by this.
 
-## Explicitly NOT done (requires your final approval first)
+## Session updates, part 4 (2026-09-06, security fixes + DNS cutover)
 
-- No DNS changes.
-- No changes to the live IIS/WordPress site.
-- No production deploy — everything above is local + a private GitHub repo only.
+- **Fixed the npm audit ReDoS finding** without a risky major-version
+  downgrade: added `"overrides": { "path-to-regexp": "6.3.0" }` to
+  `package.json`. The vulnerable version was pulled in transitively even by
+  the latest `@astrojs/vercel` (11.0.10) — npm audit's suggested fix (8.0.4)
+  was actually an older major incompatible with this project's Astro 7.
+  Verified `npm audit` → 0 vulnerabilities and the build still succeeds.
+- **Deleted `job-stuff` page** (user decision — dead chatbot embed, no real
+  content).
+- **Added security headers** in `vercel.json`: `X-Content-Type-Options`,
+  `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, HSTS
+  (`max-age=31536000; includeSubDomains` — **no `preload`**, since that's a
+  much harder commitment to reverse and wasn't asked for), `X-XSS-Protection:
+  0` (modern guidance — rely on CSP, not the deprecated legacy filter), and a
+  CSP (`default-src 'self'`, `unsafe-inline` for script/style — permissive
+  enough not to break Keystatic's bundled admin UI, which was verified
+  working against the deployed CSP with zero console errors).
+- **Lightbox fix**: clicking the enlarged image itself now closes it too
+  (previously only the backdrop or the × button did).
+- **First Vercel auto-deploys confirmed**: pushing to `main` triggers a
+  production deployment via the GitHub↔Vercel integration automatically —
+  independent of any manual `vercel deploy` CLI call.
+- **Domain attached**: `vercel domains add digitalfigments.com` — Vercel's
+  required record: `A digitalfigments.com 76.76.21.21`.
+- **DNS cutover executed** (explicit, repeated user confirmation — including
+  a final direct yes/no check right before the write) via the Cloudflare
+  API, using a `CF_API_TOKEN` already present in this machine's environment.
+  Read the zone first (only 2 records existed: apex + www A records at
+  `73.198.117.200`, both proxied, no MX/email records to worry about) before
+  changing anything. **Gotcha hit and fixed**: updating the IP while leaving
+  Cloudflare's proxy (orange cloud) on produced a `525` SSL handshake error —
+  Vercel's automatic domain verification/cert issuance checks the *public*
+  DNS answer, which proxied mode replaces with Cloudflare's own edge IPs, so
+  Vercel never saw the real record and never issued a certificate. Fixed by
+  switching both records to DNS-only (`proxied: false`), letting Vercel's own
+  edge network terminate TLS directly — confirmed working (HTTP 200 on both
+  apex and `www`, correct page content, `robots.txt` intact) within about 30
+  seconds of propagation.
+- **URL redirects from the old WP `Redirection` plugin were explicitly not
+  built** — user accepted the tradeoff of losing some traffic/links rather
+  than build them before cutover.
+
+## Explicitly NOT done
+
+- The WordPress/IIS box itself has not been touched, modified, or
+  decommissioned — it's just no longer receiving traffic for this domain
+  after the DNS change above. Decommissioning it is a separate future step.
+- Keystatic GitHub storage mode: OAuth App creation was walked through with
+  the user; wiring up `keystatic.config.ts` + Vercel env vars is the
+  in-progress next step (see top of this file for current status).
