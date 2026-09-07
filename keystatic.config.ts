@@ -2,7 +2,8 @@ import { config, fields, collection } from '@keystatic/core';
 
 export default config({
   storage: {
-    kind: 'local',
+    kind: 'github',
+    repo: { owner: 'andylacroce', name: 'digitalfigments' },
   },
   ui: {
     brand: { name: 'Digital Figments' },
