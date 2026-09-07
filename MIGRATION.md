@@ -607,13 +607,26 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   now full Astro routes backed by `tracks`, not freeform content pages) —
   this also fully retires the `figcaption`-in-MDX problem from part 10,
   since a2z no longer has any raw HTML in its content at all.
-- **Separately**: fixed the photo gallery grid using `auto-fill` instead
-  of `auto-fit` for its grid columns — `auto-fill` reserves empty tracks
-  even when a post has fewer images than would fill a row, so e.g. a
-  2-image post showed two small tiles with wasted space alongside them
-  instead of each image stretching to fill the row. One-word CSS fix
-  (`src/styles/global.css`, both the desktop and the 480px breakpoint
-  rule).
+- **Separately**: iterated on the photo gallery grid a few times, ending on
+  a masonry-style column layout. First pass switched `auto-fill` to
+  `auto-fit` so a 2-image post's tiles stretched to fill the row instead
+  of sitting small with wasted space alongside them — but that made
+  *larger* galleries look uneven (a partial last row stretched wider than
+  the full rows above it), and forcing images into fixed-size boxes
+  (`object-fit: cover`/`contain`) to fix that meant either cropping photos
+  or letterboxing them, both rejected. Landed on: `src/layouts/Layout.astro`
+  computes a column count from the post's available width and sets it as
+  `--gallery-cols`; `src/styles/global.css`'s `.gallery` uses CSS
+  multi-column layout (`columns: var(--gallery-cols, 3) 140px`) instead of
+  grid, so each photo keeps its own natural aspect ratio (`width: 100%;
+  height: auto`, no `object-fit` at all) and just flows into whichever
+  column is currently shortest — no crop, no letterboxing, no forced grid
+  cell shape.
+- `/music` rewritten from a plain text/link page into a small animated
+  3-tile icon menu (inline SVGs — eighth note / vinyl record / cassette —
+  with a hover lift + icon rotate + staggered entrance), and the a2z
+  project is now labeled "a2z Covers Project" consistently across
+  `music.astro`'s tile and `a2z.astro`'s title/h1/description.
 
 ## Explicitly NOT done
 

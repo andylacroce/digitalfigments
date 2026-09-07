@@ -213,30 +213,31 @@ main blockquote {
   border-radius: 0 6px 6px 0;
 }
 
-/* Posts with 2+ standalone images get tiled into a grid — JS adds .gallery
-   to the container and .gallery-item to each qualifying <p> (see the inline
-   script in Layout.astro). Non-image siblings (title, date, body text) span
-   the full grid width so they aren't squeezed into a column. */
+/* Posts with 2+ standalone images get tiled into a masonry-style column
+   layout — JS adds .gallery to the container and .gallery-item to each
+   qualifying <p>, and sets a column count (--gallery-cols) based on
+   available width (see the inline script in Layout.astro). Each image
+   keeps its own natural aspect ratio (no forced box, so nothing is ever
+   cropped or letterboxed) and just flows into whichever column is
+   shortest, the way CSS multi-column layout balances content by height.
+   Non-image siblings (title, date, body text) span all columns so they
+   aren't squeezed into one. */
 .gallery {
-  display: grid;
-  /* auto-fit (not auto-fill) collapses empty tracks, so a post with only
-     2-3 images has them stretch to fill the row instead of sitting as
-     small tiles with unused space alongside them. */
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.6rem;
+  columns: var(--gallery-cols, 3) 140px;
+  column-gap: 0.6rem;
 }
 .gallery > *:not(.gallery-item) {
-  grid-column: 1 / -1;
+  column-span: all;
 }
 .gallery-item {
-  margin: 0;
+  margin: 0 0 0.6rem;
+  break-inside: avoid;
 }
 .gallery-item img {
   max-width: 100%;
-  max-height: none;
   width: 100%;
-  height: 220px;
-  object-fit: cover;
+  height: auto;
+  display: block;
   margin: 0;
   border-width: 3px;
   outline-width: 2px;
@@ -328,8 +329,8 @@ article > :last-child {
   main { padding: 0 1rem 3rem; }
   footer { padding: 1.5rem 1rem 2rem; }
   main h1 { font-size: 1.6rem; }
-  .gallery { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 0.4rem; }
-  .gallery-item img { height: 150px; }
+  .gallery { columns: var(--gallery-cols, 2) 105px; column-gap: 0.4rem; }
+  .gallery-item { margin-bottom: 0.4rem; }
   .lightbox { padding: 1.25rem 0.75rem; }
   .lightbox-close { top: 0.5rem; right: 0.75rem; }
 }
