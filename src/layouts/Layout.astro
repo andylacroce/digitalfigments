@@ -152,51 +152,81 @@ const fullTitle = `${title} · ${SITE_NAME}`;
         });
       })();
 
-      // Group 2+ consecutive standalone images per post into a masonry-style
-      // column layout — each photo keeps its own natural aspect ratio (no
-      // forced box, so nothing is ever cropped or letterboxed), and CSS
-      // multi-column layout balances them by height across whatever number
-      // of columns fits the available width.
+      // Group 2+ consecutive standalone images per post into their own
+      // masonry gallery: a CSS grid (see .gallery in global.css) whose
+      // columns auto-fill the available width and whose row-height per item
+      // is set here from the image's real aspect ratio, so photos flow into
+      // whichever column is currently shortest and keep their natural
+      // proportions — no crop, no letterboxing, no forced grid cell shape.
       (function () {
+        function isImageParagraph(el) {
+          return (
+            el.tagName === "P" &&
+            el.children.length === 1 &&
+            el.children[0].tagName === "IMG" &&
+            el.textContent.trim() === ""
+          );
+        }
+
         var galleries = [];
 
         document.querySelectorAll("article, .post-body").forEach(function (container) {
-          var items = Array.prototype.filter.call(container.children, function (el) {
-            return (
-              el.tagName === "P" &&
-              el.children.length === 1 &&
-              el.children[0].tagName === "IMG" &&
-              el.textContent.trim() === ""
-            );
-          });
-          if (items.length >= 2) {
-            container.classList.add("gallery");
-            items.forEach(function (el) {
-              el.classList.add("gallery-item");
-            });
-            galleries.push({ container: container, count: items.length });
+          var children = Array.prototype.slice.call(container.children);
+          var i = 0;
+          while (i < children.length) {
+            if (!isImageParagraph(children[i])) {
+              i++;
+              continue;
+            }
+            var j = i + 1;
+            while (j < children.length && isImageParagraph(children[j])) j++;
+            if (j - i >= 2) {
+              var wrapper = document.createElement("div");
+              wrapper.className = "gallery";
+              container.insertBefore(wrapper, children[i]);
+              for (var k = i; k < j; k++) {
+                children[k].classList.add("gallery-item");
+                wrapper.appendChild(children[k]);
+              }
+              galleries.push(wrapper);
+            }
+            i = j;
           }
         });
 
         if (!galleries.length) return;
 
-        function layout() {
-          var isMobile = window.matchMedia("(max-width: 480px)").matches;
-          var tileMin = isMobile ? 105 : 140;
-          var gapPx = isMobile ? 6.4 : 9.6;
-          galleries.forEach(function (g) {
-            var width = g.container.clientWidth;
-            var maxCols = Math.max(1, Math.floor((width + gapPx) / (tileMin + gapPx)));
-            var cols = Math.min(maxCols, g.count);
-            g.container.style.setProperty("--gallery-cols", cols);
-          });
+        var ROW = 4; // px — grid-auto-rows unit; fine enough that rounding is invisible
+
+        function place(item) {
+          var img = item.children[0];
+          var ratio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 0.75;
+          var gap = parseFloat(getComputedStyle(item.parentElement).columnGap) || 0;
+          var span = Math.ceil((item.clientWidth * ratio + gap) / ROW);
+          item.style.gridRowEnd = "span " + span;
+          item.classList.add("is-visible");
         }
 
-        layout();
+        galleries.forEach(function (gallery) {
+          Array.prototype.forEach.call(gallery.children, function (item) {
+            var img = item.children[0];
+            if (img.complete) {
+              place(item);
+            } else {
+              img.addEventListener("load", function () { place(item); });
+              img.addEventListener("error", function () { place(item); });
+            }
+          });
+        });
+
         var resizeTimer;
         window.addEventListener("resize", function () {
           clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(layout, 150);
+          resizeTimer = setTimeout(function () {
+            galleries.forEach(function (gallery) {
+              Array.prototype.forEach.call(gallery.children, place);
+            });
+          }, 150);
         });
       })();
 

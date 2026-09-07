@@ -83,13 +83,27 @@ header {
   margin: 0 auto;
   padding: 1rem 1.25rem;
 }
+@keyframes brandShine {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 header a.brand {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: -0.01em;
-  color: var(--fg);
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: -0.02em;
   text-decoration: none;
+  display: inline-block;
+  background: linear-gradient(100deg, var(--accent), var(--accent-2), var(--accent));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: transform 0.2s ease;
+  animation: fadeUp 0.5s ease both, brandShine 7s ease-in-out infinite;
+}
+header a.brand:hover {
+  transform: translateY(-1px);
 }
 
 .header-actions {
@@ -182,9 +196,11 @@ main video {
   border: 4px solid var(--bg);
   outline: 3px solid var(--accent-2);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  /* Left-aligned (not centered) so a single post photo lines up with the
-     text column's left edge the same way gallery tiles do. */
-  margin: 0 0 1.5rem;
+  /* Centered (not left-aligned): a standalone photo narrower than the text
+     column used to sit flush left with dead space on the right. Body text
+     stays left-aligned throughout — only media centers — since centered
+     multi-line prose is harder to read. */
+  margin: 0 auto 1.5rem;
   transition: transform 0.15s ease, outline-color 0.15s ease;
 }
 main img:hover, main video:hover {
@@ -214,25 +230,36 @@ main blockquote {
   border-radius: 0 6px 6px 0;
 }
 
-/* Posts with 2+ standalone images get tiled into a masonry-style column
-   layout — JS adds .gallery to the container and .gallery-item to each
-   qualifying <p>, and sets a column count (--gallery-cols) based on
-   available width (see the inline script in Layout.astro). Each image
-   keeps its own natural aspect ratio (no forced box, so nothing is ever
-   cropped or letterboxed) and just flows into whichever column is
-   shortest, the way CSS multi-column layout balances content by height.
-   Non-image siblings (title, date, body text) span all columns so they
-   aren't squeezed into one. */
+/* Posts with 2+ consecutive standalone images get pulled into their own
+   masonry gallery — JS (see Layout.astro) wraps the run in a <div
+   class="gallery"> and adds .gallery-item to each image's <p>. Columns
+   auto-fill the available width via CSS grid, so unlike column-count
+   layout, extra width is distributed evenly across columns instead of
+   collecting as slack on one side. Each item's row-span is set from its
+   image's real aspect ratio, so photos keep their natural proportions (no
+   forced box, no crop, no letterboxing) while packing into whichever
+   column is currently shortest. Items fade in as their images resolve,
+   which also hides the brief instant before a span is computed. */
 .gallery {
-  columns: var(--gallery-cols, 3) 140px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--gallery-min, 140px), 1fr));
+  grid-auto-rows: 4px;
   column-gap: 0.6rem;
+  row-gap: 0;
+  margin: 0 0 1.25rem;
 }
-.gallery > *:not(.gallery-item) {
-  column-span: all;
+@media (max-width: 480px) {
+  .gallery { --gallery-min: 105px; column-gap: 0.4rem; }
 }
 .gallery-item {
-  margin: 0 0 0.6rem;
-  break-inside: avoid;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.gallery-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .gallery-item img {
   max-width: 100%;
@@ -330,8 +357,6 @@ article > :last-child {
   main { padding: 0 1rem 3rem; }
   footer { padding: 1.5rem 1rem 2rem; }
   main h1 { font-size: 1.6rem; }
-  .gallery { columns: var(--gallery-cols, 2) 105px; column-gap: 0.4rem; }
-  .gallery-item { margin-bottom: 0.4rem; }
   .lightbox { padding: 1.25rem 0.75rem; }
   .lightbox-close { top: 0.5rem; right: 0.75rem; }
 }
