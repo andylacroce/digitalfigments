@@ -9,8 +9,23 @@ below for why proxied mode didn't work) instead of the WordPress box
 (`73.198.117.200`). Confirmed live: apex + www both serve the new Astro site
 over HTTPS, `robots.txt` correct. **No redirects were built from the old WP
 `Redirection` plugin data — explicitly accepted, some traffic/links may 404.**
-The WordPress/IIS box itself has not been touched or decommissioned; it's just
-no longer receiving traffic for this domain.
+**Both IIS sites on this box were stopped 2026-09-06**, `serverAutoStart` set
+to `false` on each so neither comes back on its own after an IIS service
+restart or reboot:
+- **"Digital Figments"** (`id:1`, physical path `D:\wordpress`, bindings for
+  `digitalfigments.com`/`www`) — the site this whole migration replaces.
+- **"andylacroce.com"** (`id:2`, physical path `D:\andylacroce.com`) — a
+  separate, unrelated site. Confirmed via Cloudflare (read-only DNS check)
+  before touching it: `andylacroce.com`'s DNS already pointed entirely at
+  Vercel (apex `A` → `76.76.21.21`, `www` CNAME → `cname.vercel-dns.com`) —
+  not this box's IP at all — so this local IIS site wasn't receiving any
+  real traffic regardless. Stopping it was confirmed safe, not just assumed.
+  (That zone also has live MX/email records and an `emby` subdomain via
+  Cloudflare Tunnel — untouched, not part of this migration.)
+
+Nothing was deleted for either site — all files, databases, and IIS config
+are still intact on disk; either can be restarted anytime via
+`appcmd start site "<name>"` (as Administrator) if ever needed.
 
 ## Decision
 
@@ -366,12 +381,6 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   just worth knowing the repo will grow by the full size of whatever's
   uploaded rather than being deduplicated/stored externally the way LFS did.
 
-## Explicitly NOT done
-
-- The WordPress/IIS box itself has not been touched, modified, or
-  decommissioned — it's just no longer receiving traffic for this domain
-  after the DNS change above. Decommissioning it is a separate future step.
-
 ## Session updates, part 6 (2026-09-06, Keystatic GitHub storage completed)
 
 - **Keystatic switched to `github` storage mode and verified end to end.**
@@ -388,12 +397,33 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
 - This closes out the single most-flagged remaining item from the top of
   this file — editing content from the deployed site (phone or otherwise)
   now works the same way posting from the WordPress app used to.
-- **`npm run dev` locally no longer authenticates against GitHub storage**
-  as a side effect of this switch — the OAuth App's callback URL only
-  matches `digitalfigments.com`, so local Keystatic (`/keystatic` under
-  `npm run dev`) will show "Log in with GitHub" but the login redirect
-  won't complete correctly against `localhost`. This wasn't a workflow
-  actually being used going forward (the whole point was moving off
-  local-only editing), so it wasn't fixed, but it's worth knowing if
-  `npm run dev` → `/keystatic` is opened out of habit — it's not broken
-  code, just a mismatched callback URL for that specific host.
+- ~~`npm run dev` locally no longer authenticates against GitHub storage~~ —
+  fixed right after: `keystatic.config.ts` now picks `local` storage under
+  `import.meta.env.DEV` and `github` storage otherwise, so `npm run dev` →
+  `/keystatic` works exactly like it did before this switch (no login,
+  reads/writes files on disk directly), while the deployed site still uses
+  GitHub storage. Verified both modes with a real build + a local dev check.
+
+## Session updates, part 7 (2026-09-06, WordPress/IIS sites stopped)
+
+- **Both IIS sites on the local box were stopped**, with `serverAutoStart`
+  set to `false` on each: "Digital Figments" (`D:\wordpress`, the site this
+  migration replaces) and "andylacroce.com" (`D:\andylacroce.com`, unrelated
+  to this migration). Required Administrator privileges — the session
+  didn't have them initially, the user re-elevated it, then this proceeded.
+- The second site wasn't stopped on assumption — its Cloudflare DNS was
+  checked first (read-only) and confirmed already pointing entirely at
+  Vercel (apex `A` → `76.76.21.21`, `www` CNAME → `cname.vercel-dns.com`),
+  meaning this local IIS site was receiving zero real traffic already.
+  That zone's other records (MX/email, an `emby` Cloudflare Tunnel
+  subdomain) were left untouched — read-only check only, nothing modified
+  there.
+- Nothing was deleted on the IIS box for either site — files, databases,
+  and IIS site config are all still intact on disk. Either can be restarted
+  anytime via `appcmd start site "<name>"` (as Administrator).
+
+## Explicitly NOT done
+
+- Actually decommissioning the WordPress/IIS box (removing the sites,
+  files, database, freeing the disk space) — both sites are stopped and
+  won't restart on their own, but everything is still present on disk.
