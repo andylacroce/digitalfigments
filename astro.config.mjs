@@ -36,6 +36,9 @@ function rehypeLazyImages() {
 export default defineConfig({
   // Used to build absolute canonical/Open Graph URLs and the sitemap.
   site: 'https://digitalfigments.com',
+  redirects: {
+    '/portrayal': 'https://character-chatbot-generator.vercel.app',
+  },
   integrations: [
     react(),
     keystatic(),
