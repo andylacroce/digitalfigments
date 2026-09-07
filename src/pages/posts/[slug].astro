@@ -1,5 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import Layout from "../../layouts/Layout.astro";
 import BackLink from "../../components/BackLink.astro";
 import { formatDate } from "../../lib/format";
@@ -13,12 +15,27 @@ export async function getStaticPaths() {
   }));
 }
 
+// Post images live alongside their MDX as relative imports (./images/...) so
+// Astro's build pipeline can optimize them — which means the OG/Twitter meta
+// image can't be built from the raw markdown path like a plain URL anymore.
+// This eagerly imports every post photo so the first one referenced in a
+// post's body can be resolved to its real, optimized build output path.
+const postImages = import.meta.glob<{ default: ImageMetadata }>(
+  "/src/content/posts/images/**/*.{jpg,jpeg,png,gif,webp}",
+  { eager: true }
+);
+
 const { post } = Astro.props;
 const { Content } = await render(post);
 const formattedDate = formatDate(post.data.date);
 const description = `${post.data.title} — posted ${formattedDate} on Digital Figments.`;
 const imagePath = firstImagePath(post.body ?? "");
-const image = imagePath ? new URL(imagePath, Astro.site).toString() : undefined;
+const imageModule = imagePath
+  ? postImages[imagePath.replace(/^\.\//, "/src/content/posts/")]
+  : undefined;
+const image = imageModule
+  ? new URL((await getImage({ src: imageModule.default, width: 1200, format: "jpg" })).src, Astro.site).toString()
+  : undefined;
 ---
 
 <Layout

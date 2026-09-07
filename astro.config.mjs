@@ -39,6 +39,14 @@ export default defineConfig({
   redirects: {
     '/portrayal': 'https://character-chatbot-generator.vercel.app',
   },
+  // Post photos are full-resolution camera originals but display in a narrow
+  // content column — 'constrained' generates a responsive srcset (plus
+  // width/height, WebP/AVIF) so browsers fetch a size close to what's shown
+  // instead of the original.
+  image: {
+    layout: 'constrained',
+    responsiveStyles: true,
+  },
   integrations: [
     react(),
     keystatic(),

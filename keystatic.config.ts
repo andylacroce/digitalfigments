@@ -49,9 +49,15 @@ export default config({
         body: fields.mdx({
           label: 'Content',
           options: {
+            // publicPath isn't a real URL — it's the string Keystatic prefixes
+            // onto the filename when writing the MDX image reference. Posts
+            // live flat in src/content/posts, so a relative './images/' here
+            // produces a path Astro's build can resolve as a local import and
+            // optimize (resize, WebP/AVIF, responsive srcset), the same way
+            // the existing photo library was migrated.
             image: {
               directory: 'src/content/posts/images',
-              publicPath: '/posts-media/',
+              publicPath: './images/',
             },
           },
           components: mdxComponents,

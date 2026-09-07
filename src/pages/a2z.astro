@@ -1,8 +1,10 @@
 ---
 import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
 import BackLink from "../components/BackLink.astro";
 import TrackList from "../components/TrackList.astro";
+import a2zPhoto from "../content/posts/images/2016/07/IMG_0259.jpg";
 
 const tracks = (await getCollection("tracks"))
   .filter((t) => t.data.section === "a2z")
@@ -13,7 +15,7 @@ const tracks = (await getCollection("tracks"))
 <Layout title="a2z Covers Project (2008)" description="The a2z Covers Project (2008) — a 26-track cover-song project, one song for every letter of the alphabet.">
   <h1>a2z Covers Project (2008)</h1>
   <p><a href="/media/2016/07/a2z-covers.zip"><strong>Download all (.zip)</strong></a></p>
-  <img src="/media/2016/07/IMG_0259.jpg" alt="" />
+  <Image src={a2zPhoto} alt="" />
   <TrackList tracks={tracks} />
   <BackLink fallback="/music/" label="Music" />
 </Layout>
