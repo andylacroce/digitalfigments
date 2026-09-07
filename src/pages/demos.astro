@@ -10,7 +10,7 @@ const tracks = (await getCollection("tracks"))
   .map((t) => t.data);
 ---
 
-<Layout title="Demos" description="Original song demos by Andy Lacroce.">
+<Layout title="Demos" description="Original song demos.">
   <h1>Demos</h1>
   <TrackList tracks={tracks} />
   <BackLink fallback="/music/" label="Music" />

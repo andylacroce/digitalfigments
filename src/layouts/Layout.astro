@@ -2,8 +2,7 @@
 import '../styles/global.css';
 
 const SITE_NAME = "Digital Figments";
-const DEFAULT_DESCRIPTION =
-  "Photos, doodles, videos, and song covers — a personal media blog by Andy Lacroce.";
+const DEFAULT_DESCRIPTION = "Photos, doodles, videos, and song covers — a personal media blog.";
 
 interface Props {
   title: string;
@@ -86,7 +85,7 @@ const fullTitle = `${title} · ${SITE_NAME}`;
       <slot />
     </main>
     <footer>
-      <p>Curated by Andy Lacroce &middot; <a href="/privacy-policy/">Privacy Policy</a></p>
+      <p><a href="/privacy-policy/">Privacy Policy</a></p>
     </footer>
     <div id="lightbox" class="lightbox" hidden>
       <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
