@@ -539,6 +539,36 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   regenerating it on the GitHub App's settings page is a reasonable hygiene
   step if desired.
 
+## Session updates, part 10 (2026-09-07, Keystatic "Missing component" errors)
+
+- **Opening `demos`, `a2z`, or any post with a `<video>` tag in Keystatic
+  threw "Missing component definition for X"** (X = `audio`, `video`,
+  `figcaption`). Cause: these pages/posts embed raw HTML tags straight from
+  the original WordPress content (`<audio controls src="...">`,
+  `<video controls src="...">`, and — only in `a2z.mdx` — `<figcaption>`
+  for song captions), and Keystatic's MDX editor requires an explicit
+  `components` definition for any non-standard-markdown element before it
+  can open/validate an entry containing one.
+- **Fix**: registered `audio` and `video` as MDX components in
+  `keystatic.config.ts` (via `@keystatic/core/content-components`'
+  `block()`), wired into both the `posts` and `pages` collections' `mdx()`
+  fields.
+- **`figcaption` needed a different fix, not just a component
+  definition.** `a2z.mdx` had `</audio><figcaption>caption</figcaption>`
+  crammed on one line with no blank-line separation — MDX's parser
+  classifies that as *inline text content* within a paragraph rather than
+  a block-level element, which doesn't match a `block()`-kind component
+  registration (error changed to "mdxJsxTextElement has unexpected
+  children" once `audio`/`video` were fixed, even after adding blank
+  lines around the tags). Since `figcaption` had no CSS styling depending
+  on the tag anyway, the simpler and more robust fix was converting all 26
+  `<figcaption>...</figcaption>` captions in `a2z.mdx` to plain italic
+  markdown text (`*caption*`) instead of fighting MDX's inline-vs-block
+  classification with a custom component.
+- Verified in Keystatic (local storage, `npm run dev`): `demos`, `a2z`,
+  and `tranquility` (a post with an embedded video) all open with zero
+  errors now.
+
 ## Explicitly NOT done
 
 - Actually decommissioning the WordPress/IIS box (removing the sites,

@@ -32,10 +32,7 @@ function rehypeLazyImages() {
 
 // https://astro.build/config
 export default defineConfig({
-  // Final intended production domain (see MIGRATION.md) — used to build
-  // absolute canonical/Open Graph URLs and the sitemap even before DNS
-  // cutover; Vercel preview deployments already send their own noindex
-  // header, so pointing this at the real domain ahead of time is safe.
+  // Used to build absolute canonical/Open Graph URLs and the sitemap.
   site: 'https://digitalfigments.com',
   integrations: [
     react(),
