@@ -475,6 +475,24 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   and IIS site config are all still intact on disk. Either can be restarted
   anytime via `appcmd start site "<name>"` (as Administrator).
 
+## Session updates, part 8 (2026-09-06, www TLS cert fix)
+
+- **`/keystatic` (and everything else) was broken on `www.digitalfigments.com`**
+  — TLS failed before any request-level routing even happened. Root cause:
+  `vercel domains add digitalfigments.com digitalfigments` only registers
+  the apex with the project; `www` had a correct DNS record pointing at
+  Vercel, but was never separately added as a project domain, so Vercel had
+  no certificate for that exact hostname and served the apex's cert instead
+  (`CN=digitalfigments.com`, confirmed by connecting directly and reading
+  back the presented certificate) — a plain TLS/SNI mismatch, not anything
+  Keystatic- or routing-specific. Fixed with `vercel domains add
+  www.digitalfigments.com digitalfigments`; Vercel issued a matching
+  certificate within about 30 seconds. Confirmed: `www.digitalfigments.com/`
+  and `/keystatic` both return 200 now.
+- Lesson for next time a domain gets added to a Vercel project: **add every
+  hostname you actually serve traffic on explicitly** (apex and `www`
+  separately) — don't assume adding one implies the other.
+
 ## Explicitly NOT done
 
 - Actually decommissioning the WordPress/IIS box (removing the sites,
