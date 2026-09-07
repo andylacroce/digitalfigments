@@ -493,6 +493,52 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   hostname you actually serve traffic on explicitly** (apex and `www`
   separately) — don't assume adding one implies the other.
 
+## Session updates, part 9 (2026-09-06, CSP + wrong GitHub app type, twice-fixed)
+
+- **CSP was blocking Keystatic's post-login GitHub calls entirely.**
+  `connect-src 'self'` in `vercel.json` blocked the browser-side
+  GraphQL/REST calls Keystatic makes to `api.github.com` after a
+  successful login — every read/write would have failed silently from the
+  user's perspective (visible only as browser console CSP violations).
+  Fixed by adding `https://api.github.com` to `connect-src`,
+  `https://avatars.githubusercontent.com` to `img-src` (user avatar), and
+  `https://vercel.live` to `script-src`/`connect-src` (Vercel's own toolbar
+  feedback widget, unrelated but also blocked).
+- **Bigger mistake: the wrong GitHub integration type entirely.** GitHub
+  has two distinct things confusingly both called "apps" — a plain **OAuth
+  App** (simple client_id/secret, whatever scope you request) and a
+  **GitHub App** (the installable kind, granted access per-repo with
+  granular permissions). Part 6 above walked through creating an OAuth
+  App — Keystatic's `github` storage mode actually requires a GitHub App.
+  The OAuth App's login flow *looked* like it worked (GitHub's authorize
+  page redirect is visually identical for both types), but after actually
+  completing login, Keystatic's repo-access check — built around a GitHub
+  App's installation model — failed with "Repo not found... you haven't
+  added the GitHub app to it", which is really GitHub returning "not
+  found" for a private repo the OAuth token didn't have properly-scoped
+  access to.
+- **Fix**: removed the OAuth App's `KEYSTATIC_GITHUB_CLIENT_ID`/`_SECRET`
+  from Vercel, created a proper **GitHub App** instead (`digital-figments-
+  keystatic`) with the same callback URL, "Request user authorization
+  (OAuth) during installation" checked, webhook unchecked, Repository
+  permissions → Contents: Read and write, installed specifically on
+  `andylacroce/digitalfigments`. Set `KEYSTATIC_GITHUB_CLIENT_ID`,
+  `KEYSTATIC_GITHUB_CLIENT_SECRET` (both from the GitHub App, not the old
+  OAuth App), and `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG=digital-figments-
+  keystatic` (lets Astro/Keystatic generate an "install this app" link).
+  `KEYSTATIC_SECRET` didn't need to change — it's just a session-encryption
+  key, unrelated to which app type is used.
+- The original OAuth App (`Ov23liamyuofj7qpb03A`) was never deleted on
+  GitHub's side — only its env vars were removed from Vercel. Since its
+  secret passed through this conversation, deleting it entirely at
+  github.com/settings/developers is worth doing for cleanliness/hygiene,
+  though it's inert now (nothing references it).
+- The GitHub App's **private key** (RSA, for server-to-server JWT auth) was
+  also briefly shared in conversation by mistake — Keystatic's OAuth-based
+  flow doesn't use it at all, so it was never used or stored anywhere, but
+  regenerating it on the GitHub App's settings page is a reasonable hygiene
+  step if desired.
+
 ## Explicitly NOT done
 
 - Actually decommissioning the WordPress/IIS box (removing the sites,

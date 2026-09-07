@@ -108,7 +108,7 @@ that scope applied. That's why all site CSS lives in the plain, unscoped
 | Command           | Action                                  |
 | :----------------- | :--------------------------------------- |
 | `npm install`       | Install dependencies                     |
-| `npm run dev`       | Local dev server — Keystatic admin at `/keystatic` uses `local` storage here (reads/writes files on disk directly, no login needed), since the GitHub OAuth App's callback only matches digitalfigments.com |
+| `npm run dev`       | Local dev server — Keystatic admin at `/keystatic` uses `local` storage here (reads/writes files on disk directly, no login needed), since the GitHub App's callback only matches digitalfigments.com |
 | `npm run build`     | Build to `./dist/`                       |
 | `npm run preview`   | Preview the production build locally     |
 
