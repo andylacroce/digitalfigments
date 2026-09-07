@@ -1,4 +1,27 @@
 import { config, fields, collection } from '@keystatic/core';
+import { block } from '@keystatic/core/content-components';
+
+// Keystatic requires an explicit component definition for any
+// non-standard-markdown element (raw HTML tags included) used in MDX
+// content, or opening that entry fails with "Missing component
+// definition for X" — see MIGRATION.md for the audio/video/figcaption
+// history behind this list.
+const mdxComponents = {
+  audio: block({
+    label: 'Audio',
+    schema: {
+      src: fields.text({ label: 'Audio file URL' }),
+      controls: fields.checkbox({ label: 'Show controls', defaultValue: true }),
+    },
+  }),
+  video: block({
+    label: 'Video',
+    schema: {
+      src: fields.text({ label: 'Video file URL' }),
+      controls: fields.checkbox({ label: 'Show controls', defaultValue: true }),
+    },
+  }),
+};
 
 // Local dev uses `local` storage (reads/writes files on disk directly via
 // `npm run dev`) since the GitHub OAuth App's callback URL only matches the
@@ -31,6 +54,7 @@ export default config({
               publicPath: '/posts-media/',
             },
           },
+          components: mdxComponents,
         }),
       },
     }),
@@ -83,7 +107,7 @@ export default config({
           description: 'Only used to order entries on /blog — leave blank for pages that aren\'t part of that section.',
           validation: { isRequired: false },
         }),
-        body: fields.mdx({ label: 'Content' }),
+        body: fields.mdx({ label: 'Content', components: mdxComponents }),
       },
     }),
   },
