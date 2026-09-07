@@ -116,6 +116,7 @@ header a.brand {
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 .back-to-top[hidden] { display: none; }
+.back-to-top svg { width: 0.9rem; height: 0.9rem; }
 .back-to-top:hover { background: var(--accent); color: var(--bg); transform: translateY(-1px); }
 
 #theme-toggle {
