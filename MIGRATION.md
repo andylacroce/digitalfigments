@@ -284,3 +284,23 @@ a possible rollback.
   - Removed personal-name references from the site's own pages and
     metadata (page descriptions, the footer, the privacy policy) — the
     footer now just links to the privacy policy.
+- **Post images moved into Astro's build-time optimization pipeline**
+  - A real Lighthouse run found a 12544x2720, 14.5MB original JPEG being
+    displayed at 372x81px on the home feed (43s LCP on throttled mobile) —
+    images in `public/` are served byte-for-byte as authored and are never
+    resized, reformatted, or made responsive by Astro, regardless of the
+    lazy-loading/cache-header work noted above.
+  - Moved all 76 post photos from `public/media` into
+    `src/content/posts/images` and rewrote their MDX references to
+    relative paths, so the build now generates resized, WebP/AVIF,
+    responsive (`srcset`/`sizes`) variants with real `width`/`height`
+    automatically; a global `image.layout: 'constrained'` config in
+    `astro.config.mjs` drives this for every post image.
+  - Updated the best-effort OG/Twitter preview-image lookup (previously a
+    plain `new URL()` against the raw markdown path) to resolve the same
+    relative path to its optimized build output instead.
+  - Updated Keystatic's post image field (`publicPath`) to write the same
+    relative-path convention, so images added through the CMS going
+    forward get the same optimization as the migrated library.
+  - Audio/video/zip files stayed in `public/media` untouched — this only
+    affects photos.
