@@ -35,6 +35,26 @@ box auto-resumes serving traffic. Reversible: `Set-Service W3SVC
 -StartupType Automatic; Start-Service W3SVC` (as Administrator) brings it
 all back if ever needed.
 
+**The `MySQL80` Windows service (WordPress's database) was also stopped and
+set to `Manual` startup.** Checked first (read-only `SHOW DATABASES`) that
+nothing else used this instance — only the built-in system schemas
+(`information_schema`, `mysql`, `performance_schema`, `sys`) plus
+`wordpress` existed, so nothing unrelated was at risk. Reversible the same
+way: `Set-Service MySQL80 -StartupType Automatic; Start-Service MySQL80`.
+
+**PHP has no separate service to stop** — checked (no matching Windows
+service, no running `php`/`php-cgi` process) and confirmed it was never
+more than IIS's FastCGI module spawning `php-cgi.exe` on demand per
+request. With `W3SVC` already stopped, nothing invokes PHP anymore; there
+was nothing further to disable.
+
+At this point everything tied to the old WordPress stack on this box —
+both IIS sites, the `W3SVC` service, and the `MySQL80` service — is stopped
+and set to `Manual` startup (won't come back on reboot), with all files,
+the database, and IIS config left fully intact on disk for a possible
+future full decommission (deleting `D:\wordpress` and dropping the
+`wordpress` database) whenever that's actually wanted.
+
 **Jetpack's Downtime Monitor module was deactivated** (`wp jetpack module
 deactivate monitor`, via WP-CLI at `D:\OneDrive\Desktop\wp-cli\wp-cli.phar`
 — works directly against the DB/filesystem, no need for the site to be
