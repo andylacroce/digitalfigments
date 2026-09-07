@@ -126,12 +126,15 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
    (they inherit the global look but haven't been individually reviewed).
 6. **`old-site/`** is served as static files but not linked from anywhere in the
    new nav — decide if/where it should be discoverable.
-7. **Git LFS is enabled** (`.gitattributes`) for `*.zip .mp4 .mp3 .m4a .wav .mov .mid`
-   — audio/video/the a2z zip total ~419MB, which is under GitHub's free 1GB LFS
-   storage quota today but worth watching if more audio/video content gets added.
-   ~~Vercel needs LFS objects fetched during build...~~ Confirmed working this
-   session with no extra setup — verified an LFS-tracked audio file serves its
-   real ~4.3MB content (not a pointer file) from the live deployment.
+7. ~~Git LFS is enabled...~~ **Removed entirely** (see "Session updates, part
+   5"). Vercel's git-triggered auto-deploys never fetched LFS content at all
+   (plain `git clone`, no smudge step) — every audio/video file served a
+   ~130-byte pointer instead of real content in production, even though my
+   very first manual `vercel deploy` (a local-file upload, not a git clone)
+   happened to work and briefly created a false sense that LFS was fine.
+   All `*.mp3 .m4a .wav .mov .mid .mp4 .zip` content is now committed as
+   regular git blobs — even the largest file (the a2z zip, ~97.09 MiB) is
+   safely under GitHub's 100 MiB hard limit for non-LFS files.
 8. ~~Two content posts had no WP category...~~ Moot — categories were dropped
    entirely (see below).
 
@@ -332,6 +335,36 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
 - **URL redirects from the old WP `Redirection` plugin were explicitly not
   built** — user accepted the tradeoff of losing some traffic/links rather
   than build them before cutover.
+
+## Session updates, part 5 (2026-09-06, Git LFS root-caused and removed)
+
+- **Root-caused and fixed "a lot of the music players aren't working."**
+  Every audio/video URL on the live site was serving a ~130-byte Git LFS
+  pointer file instead of the real content. Diagnosis: a fresh, independent
+  `git clone` (my own credentials) pulled all LFS objects fine — ruling out
+  a GitHub-side storage/bandwidth problem — but Vercel's build logs for a
+  normal GitHub-triggered deploy showed a plain `Cloning github.com/...`
+  step with no LFS filtering/smudge output at all. The very first deployment
+  this session *did* have real audio content, which briefly looked like
+  confirmation LFS was working — but that deployment came from a manual
+  `vercel deploy` CLI call, which uploads the local working directory
+  directly (bypassing git and LFS entirely), not from a git clone. Every
+  deployment since (all git-triggered, via the GitHub integration) has
+  silently served pointer files.
+- **Fix**: removed Git LFS entirely rather than hunt for an undocumented
+  Vercel project toggle — deleted `.gitattributes`, ran
+  `git add --renormalize .` to convert the 87 previously-LFS-tracked files
+  back to regular git blobs, and pushed (~400MB). Confirmed on
+  digitalfigments.com: `angie.mp3` (9.7MB), `JohnnyAppleseed.mp3` (4.3MB),
+  and `andy-lacroce-a2z.zip` (97.09 MiB, the largest file — still safely
+  under GitHub's 100 MiB hard limit for non-LFS files) all now serve their
+  real content.
+- Worth knowing for later: any *new* binary file Keystatic writes through
+  GitHub's Contents API (once GitHub storage mode is live) will also land as
+  a regular blob regardless of file extension — the GitHub API doesn't run
+  git's LFS clean filter, so this isn't a regression risk going forward,
+  just worth knowing the repo will grow by the full size of whatever's
+  uploaded rather than being deduplicated/stored externally the way LFS did.
 
 ## Explicitly NOT done
 
