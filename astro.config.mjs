@@ -36,5 +36,13 @@ export default defineConfig({
       filter: (page) => !siteConfig.unindexedPaths.some((path) => new URL(page).pathname.startsWith(path)),
     }),
   ],
-  adapter: vercel()
+  adapter: vercel(),
+  vite: {
+    build: {
+      // Keystatic's admin UI bundle (only loaded on /keystatic) is well
+      // over the default 500kB warning threshold; it's a third-party
+      // admin-only chunk we can't meaningfully split further ourselves.
+      chunkSizeWarningLimit: 3000,
+    },
+  },
 });
