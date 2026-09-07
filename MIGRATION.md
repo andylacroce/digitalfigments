@@ -27,6 +27,39 @@ Nothing was deleted for either site — all files, databases, and IIS config
 are still intact on disk; either can be restarted anytime via
 `appcmd start site "<name>"` (as Administrator) if ever needed.
 
+**The underlying IIS Windows service (`W3SVC`) itself was also stopped and
+set to `Manual` startup** (was `Automatic`) — with both sites already
+disabled individually, there was no remaining reason for IIS to start on
+boot at all. This is the durable, boot-level guarantee that nothing on this
+box auto-resumes serving traffic. Reversible: `Set-Service W3SVC
+-StartupType Automatic; Start-Service W3SVC` (as Administrator) brings it
+all back if ever needed.
+
+**Jetpack's Downtime Monitor module was deactivated** (`wp jetpack module
+deactivate monitor`, via WP-CLI at `D:\OneDrive\Desktop\wp-cli\wp-cli.phar`
+— works directly against the DB/filesystem, no need for the site to be
+"up" or for a wp-admin login) so it stops sending "your site is down"
+alerts now that the WordPress site is intentionally, permanently offline.
+
+**Incident during cutover**: a pre-existing hourly scheduled task
+("Cloudflare IPv4 DNS Updater", `D:\code\cloudflare-ip-updater\`) — a
+legitimate DDNS updater for tracking this network's Comcast dynamic IP —
+reverted the DNS change back to `73.198.117.200` about an hour after the
+original cutover, then restarted `W3SVC` (its own designed behavior,
+unaware the domain had moved to Vercel). This caused a real, if brief,
+outage for external visitors, not just a local artifact — caught via an
+external check (Anthropic's own WebFetch infrastructure hit
+`ECONNREFUSED 73.198.117.200`, not just a local-machine timeout). Fixed by
+re-pointing the DNS record back to `76.76.21.21`, then removing the
+scheduled task and deleting `D:\code\cloudflare-ip-updater\` entirely
+(script, config — which held a separate Cloudflare API token and a Gmail
+app password, both now gone from disk — state, and logs) per explicit
+instruction, since this domain no longer lives on this network's dynamic
+IP at all. If you want to be thorough, that embedded Cloudflare API token
+was never revoked via Cloudflare's dashboard (only deleted locally) —
+low risk since it was narrowly scoped to this one automation, but worth
+knowing.
+
 ## Decision
 
 Astro (static site generator) + Keystatic (git-backed CMS admin, no database/server),
