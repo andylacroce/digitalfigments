@@ -2,7 +2,7 @@
 
 When starting the dev server, use background mode:
 
-```
+```sh
 astro dev --background
 ```
 
@@ -10,7 +10,7 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 
 ## Documentation
 
-Full documentation: https://docs.astro.build
+Full documentation: <https://docs.astro.build>
 
 Consult these guides before working on related tasks:
 

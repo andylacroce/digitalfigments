@@ -12,6 +12,7 @@ over HTTPS, `robots.txt` correct. **No redirects were built from the old WP
 **Both IIS sites on this box were stopped 2026-09-06**, `serverAutoStart` set
 to `false` on each so neither comes back on its own after an IIS service
 restart or reboot:
+
 - **"Digital Figments"** (`id:1`, physical path `D:\wordpress`, bindings for
   `digitalfigments.com`/`www`) — the site this whole migration replaces.
 - **"andylacroce.com"** (`id:2`, physical path `D:\andylacroce.com`) — a
@@ -174,7 +175,7 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
 3. ~~No Vercel project created yet.~~ Done this session — `vercel link` created
    project `digitalfigments` (org/team `andylacroces-projects`) and connected
    the GitHub repo, then `vercel deploy` shipped it live at
-   **https://digitalfigments.vercel.app**. Note: Vercel auto-assigns a brand
+   **<https://digitalfigments.vercel.app>**. Note: Vercel auto-assigns a brand
    new project's *first* deployment to "production" internally (its own
    platform quirk, not something `--prod` triggered) — this only affects that
    `.vercel.app` alias since no custom domain has ever been attached to the
@@ -350,7 +351,7 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   for this session). Worth a dedicated pass before cutover.
 - **First deployment**: `vercel link` created the Vercel project
   `digitalfigments` and connected the GitHub repo; `vercel deploy` shipped it
-  live at **https://digitalfigments.vercel.app** (confirmed working: home
+  live at **<https://digitalfigments.vercel.app>** (confirmed working: home
   page, `/blog/`, `/robots.txt`, `/sitemap-index.xml`, and — the thing
   flagged as a risk since the start — a Git-LFS-tracked audio file serving
   its real ~4.3MB content, not a pointer file, with zero extra Vercel

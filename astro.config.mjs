@@ -17,7 +17,9 @@ import { siteConfig } from './src/site.config.ts';
 // lazy loading already fetches near-viewport images promptly enough that the
 // blanket rule is the right tradeoff for a personal blog over per-post logic.
 function rehypeLazyImages() {
+  /** @param {any} tree */
   return (tree) => {
+    /** @param {any} node */
     function visit(node) {
       if (node.tagName === 'img') {
         node.properties ??= {};

@@ -1,9 +1,10 @@
 ---
+import type { GetStaticPathsOptions } from "astro";
 import { getCollection, render } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 import { formatDate } from "../lib/format";
 
-export async function getStaticPaths({ paginate }) {
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
   const posts = (await getCollection("posts")).sort(
     (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
   );

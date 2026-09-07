@@ -1,12 +1,12 @@
 # digitalfigments.com
 
-Astro + Keystatic site, live at **https://digitalfigments.com**. Replaced a
+Astro + Keystatic site, live at **<https://digitalfigments.com>**. Replaced a
 self-hosted WordPress/IIS install — see [MIGRATION.md](./MIGRATION.md) for
 the full migration history, decisions, and rough edges.
 
 ## Editing content
 
-**Day to day, use Keystatic at https://digitalfigments.com/keystatic** — log
+**Day to day, use Keystatic at <https://digitalfigments.com/keystatic>** — log
 in with GitHub when prompted. Every save commits directly to the `main`
 branch of the `andylacroce/digitalfigments` repo, which auto-deploys via
 Vercel's GitHub integration within about a minute. This is what replaced
@@ -78,7 +78,7 @@ bulk edits or anything easier to script than click through.
 
 ## Structure
 
-```
+```text
 src/
 ├── content/
 │   ├── posts/    photo/video blog posts, .mdx (title, date)
@@ -117,12 +117,38 @@ that scope applied. That's why all site CSS lives in the plain, unscoped
 
 ## Commands
 
-| Command           | Action                                  |
+| Command | Action |
 | :----------------- | :--------------------------------------- |
-| `npm install`       | Install dependencies                     |
-| `npm run dev`       | Local dev server — Keystatic admin at `/keystatic` uses `local` storage here (reads/writes files on disk directly, no login needed), since the GitHub App's callback only matches digitalfigments.com |
-| `npm run build`     | Build to `./dist/`                       |
-| `npm run preview`   | Preview the production build locally     |
+| `npm install` | Install dependencies |
+| `npm run dev` | Local dev server — Keystatic admin at `/keystatic` uses `local` storage here (reads/writes files on disk directly, no login needed), since the GitHub App's callback only matches digitalfigments.com |
+| `npm run build` | Build to `./dist/` |
+| `npm run lint` | ESLint (`.astro`, `.ts`, `.mjs`) |
+| `npm run lint:md` | markdownlint over every `.md` file |
+| `npm run typecheck` | `astro check` |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run test:coverage` | Unit tests with the coverage gate (90%) |
+| `npm run test:e2e` | Playwright E2E tests (gallery, lightbox, theme toggle, back-to-top) — builds first, then serves `dist/client` |
+| `npm run ci` | The full pipeline above, in order, stopping at the first failure — the single command CI runs |
+
+The whole site prerenders to static HTML even though the Vercel adapter is
+installed (for its function/output shape, not SSR), so `npm run preview`
+(`astro preview`) isn't meaningful here — it exits immediately with nothing
+to serve. To preview a production build locally, run `npm run build` then
+`npx serve dist/client`.
+
+## Testing & CI
+
+`npm run ci` (`.github/workflows/ci.yml`) is the single source of truth for
+whether a change is done — lint, markdown lint, typecheck, unit tests (90%
+coverage gate), build, then E2E, stopping at the first failure. A pre-commit
+hook (`.husky/pre-commit`, via `lint-staged`) runs `secretlint` on every
+staged file and ESLint on staged code files — fast, so it doesn't try to
+replace `npm run ci`, just catches secrets and obvious lint errors before
+they're committed. Dependabot (`.github/dependabot.yml`) opens grouped
+weekly-ish PRs for npm and GitHub Actions updates, and both Dependabot
+alerts and automated security-fix PRs are enabled on the repo. Code
+scanning/secret scanning (GitHub Advanced Security) aren't available on
+this private repo's plan, so `secretlint` is the closest local equivalent.
 
 ## Deployment
 
