@@ -1,10 +1,16 @@
 import { config, fields, collection } from '@keystatic/core';
 
+// Local dev uses `local` storage (reads/writes files on disk directly via
+// `npm run dev`) since the GitHub OAuth App's callback URL only matches the
+// production domain — a real GitHub login can't complete against localhost.
+// Production uses `github` storage so content can be edited from the
+// deployed site itself.
+const storage = import.meta.env.DEV
+  ? { kind: 'local' as const }
+  : { kind: 'github' as const, repo: { owner: 'andylacroce', name: 'digitalfigments' } };
+
 export default config({
-  storage: {
-    kind: 'github',
-    repo: { owner: 'andylacroce', name: 'digitalfigments' },
-  },
+  storage,
   ui: {
     brand: { name: 'Digital Figments' },
   },
