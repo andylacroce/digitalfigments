@@ -371,6 +371,29 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
 - The WordPress/IIS box itself has not been touched, modified, or
   decommissioned — it's just no longer receiving traffic for this domain
   after the DNS change above. Decommissioning it is a separate future step.
-- Keystatic GitHub storage mode: OAuth App creation was walked through with
-  the user; wiring up `keystatic.config.ts` + Vercel env vars is the
-  in-progress next step (see top of this file for current status).
+
+## Session updates, part 6 (2026-09-06, Keystatic GitHub storage completed)
+
+- **Keystatic switched to `github` storage mode and verified end to end.**
+  `keystatic.config.ts` now points at `{ owner: 'andylacroce', repo:
+  'digitalfigments' }`. Set on Vercel (production env): `KEYSTATIC_GITHUB_CLIENT_ID`,
+  `KEYSTATIC_GITHUB_CLIENT_SECRET` (from the GitHub OAuth App the user
+  created — callback `https://digitalfigments.com/api/keystatic/github/oauth/callback`),
+  and a freshly generated `KEYSTATIC_SECRET`. Confirmed working: `/keystatic`
+  shows "Log in with GitHub", and following that link redirects to GitHub's
+  real OAuth authorize page with the correct `client_id` and `redirect_uri`.
+  Completing the actual login (and thus a real save-from-the-deployed-site
+  test) needs the user's own GitHub session — see the README's "Editing
+  content" section for how to actually use it day to day.
+- This closes out the single most-flagged remaining item from the top of
+  this file — editing content from the deployed site (phone or otherwise)
+  now works the same way posting from the WordPress app used to.
+- **`npm run dev` locally no longer authenticates against GitHub storage**
+  as a side effect of this switch — the OAuth App's callback URL only
+  matches `digitalfigments.com`, so local Keystatic (`/keystatic` under
+  `npm run dev`) will show "Log in with GitHub" but the login redirect
+  won't complete correctly against `localhost`. This wasn't a workflow
+  actually being used going forward (the whole point was moving off
+  local-only editing), so it wasn't fixed, but it's worth knowing if
+  `npm run dev` → `/keystatic` is opened out of habit — it's not broken
+  code, just a mismatched callback URL for that specific host.
