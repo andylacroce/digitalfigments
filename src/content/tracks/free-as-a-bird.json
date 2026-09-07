@@ -1,0 +1,11 @@
+{
+  "song": "Free as a Bird",
+  "section": "covers",
+  "artist": "The Beatles",
+  "date": "2002",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/freeasabird.mp3"
+  },
+  "order": 5
+}

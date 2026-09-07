@@ -58,14 +58,27 @@ export default config({
         }),
       },
     }),
-    covers: collection({
-      label: 'Covers (song archive)',
+    tracks: collection({
+      label: 'Tracks (covers, demos, a2z)',
       slugField: 'song',
-      path: 'src/content/covers/*',
+      path: 'src/content/tracks/*',
       format: 'json',
       schema: {
-        song: fields.slug({ name: { label: 'Song title' } }),
-        artist: fields.text({ label: 'Original artist' }),
+        song: fields.slug({ name: { label: 'Song / track title' } }),
+        section: fields.select({
+          label: 'Section',
+          description: 'Which page this track appears on',
+          options: [
+            { label: 'Covers', value: 'covers' },
+            { label: 'Demos (originals)', value: 'demos' },
+            { label: 'a2z Covers (2008)', value: 'a2z' },
+          ],
+          defaultValue: 'covers',
+        }),
+        artist: fields.text({
+          label: 'Original artist',
+          description: 'Leave blank for demos — those are originals, not covers',
+        }),
         date: fields.text({
           label: 'Date recorded',
           description: 'Free text — some originals only have an approximate year, e.g. "200_"',
@@ -90,7 +103,7 @@ export default config({
         ),
         order: fields.integer({
           label: 'Sort order',
-          description: 'Lower numbers appear first on the Covers page',
+          description: 'Lower numbers appear first within this section',
           defaultValue: 0,
         }),
       },
@@ -107,7 +120,7 @@ export default config({
           description: 'Only used to order entries on /blog — leave blank for pages that aren\'t part of that section.',
           validation: { isRequired: false },
         }),
-        body: fields.mdx({ label: 'Content', components: mdxComponents }),
+        body: fields.mdx({ label: 'Content' }),
       },
     }),
   },

@@ -1,0 +1,11 @@
+{
+  "song": "Norwegian Wood",
+  "section": "covers",
+  "artist": "The Beatles",
+  "date": "200_",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/2021/11/norwegianwood.mp3"
+  },
+  "order": 13
+}

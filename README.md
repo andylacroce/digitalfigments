@@ -27,25 +27,34 @@ There are three collections:
 - There's no tags/category field anymore (removed — the old WordPress
   images/video/music/gif/text taxonomy wasn't adding value).
 
-### Covers (the song-cover archive at `/covers/`)
+### Tracks (`/covers/`, `/demos/`, `/a2z/` — one collection, one shared layout)
 
-- **Add**: Covers → Add. Fill in song title, original artist, a free-text
-  date (some originals only have an approximate year), pick **Audio file**
-  (upload an mp3/m4a/wav) or **YouTube / video embed** (paste a URL), and a
-  **sort order** (lower numbers appear first on the page).
-- Order isn't automatic — if you want a new entry to appear in a specific
-  spot in the list, set its order number relative to the existing entries.
+All three music pages are driven by a single **Tracks** collection and
+render through the same `TrackList` component, so they always look and
+behave identically (song title → artist → date, then the player, with a
+consistent divider between entries).
+
+- **Add**: Tracks → Add. Fill in song title, pick a **Section** (Covers,
+  Demos, or a2z — this is what routes it to the right page), original
+  artist (leave blank for Demos — those are originals, not covers), a
+  free-text date, pick **Audio file** (upload) or **YouTube / video embed**
+  (paste a URL), and a **sort order** (lower numbers appear first *within
+  that section* — the three sections sort independently).
+- **Edit/Delete**: same as any other collection entry.
+- The `/a2z/` page also has a small fixed intro (download-all `.zip` link,
+  header image) that isn't part of the collection — it's hardcoded in
+  `src/pages/a2z.astro` since it's page-specific framing, not a track.
 
 ### Static pages
 
-- Things like `/music/`, `/demos/`, `/a2z/`, `/privacy-policy/`. Same
-  add/edit/delete flow. Most don't need a date — the optional **Date** field
-  only matters for pages routed under `/blog/` (see below).
+- Things like `/music/`, `/privacy-policy/`. Same add/edit/delete flow.
+  Most don't need a date — the optional **Date** field only matters for
+  pages routed under `/blog/` (see below).
 
 ### Editing content by hand instead (fallback)
 
 Keystatic just reads/writes plain files — you can also edit
-`src/content/posts/*.mdx`, `src/content/covers/*.json`, or
+`src/content/posts/*.mdx`, `src/content/tracks/*.json`, or
 `src/content/pages/*.mdx` directly and `git push`. Same result, useful for
 bulk edits or anything easier to script than click through.
 
@@ -73,18 +82,21 @@ bulk edits or anything easier to script than click through.
 src/
 ├── content/
 │   ├── posts/    photo/video blog posts, .mdx (title, date)
-│   ├── covers/   cover-song archive entries, .json
-│   └── pages/    static pages (music, demos, a2z, blog essays, etc.), .mdx
+│   ├── tracks/   covers/demos/a2z entries, one collection, .json (section field)
+│   └── pages/    static pages (music, blog essays, etc.), .mdx
 ├── content.config.ts   Astro content-collection schemas
 ├── site.config.ts       "unexposed" routes + /blog slug list (see above)
 ├── lib/                 formatDate, OG-image extraction, pages-collection helpers
-├── components/          BackLink (dynamic "back" button used on every content page)
+├── components/
+│   ├── BackLink.astro    dynamic "back" button used on every content page
+│   └── TrackList.astro   shared list UI for covers/demos/a2z
 ├── styles/global.css    all site CSS (plain/unscoped — see note below)
 ├── layouts/Layout.astro shared shell: nav, theme toggle, lightbox, SEO meta tags
 └── pages/
     ├── [...page].astro    paginated home feed
     ├── posts/[slug].astro single post
-    ├── covers.astro        covers archive
+    ├── covers.astro, demos.astro, a2z.astro  each: fetch its section of
+    │                       `tracks`, render via <TrackList>
     ├── [slug].astro        generic static pages
     ├── blog/                index + [slug] for the /blog section
     └── robots.txt.ts        generated from site.config.ts

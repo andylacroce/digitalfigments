@@ -1,0 +1,37 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import BackLink from "../components/BackLink.astro";
+
+const tracks = await getCollection("tracks");
+const count = (section: string) => tracks.filter((t) => t.data.section === section).length;
+---
+
+<Layout
+  title="Music"
+  description="Song covers, an a2z cover-song project, and original demos by Andy Lacroce."
+  noindex
+>
+  <h1>Music</h1>
+  <ul class="music-nav plain-list">
+    <li class="music-nav-item divided-list-item">
+      <a href="/covers/"><strong>Covers</strong></a>
+      <p>{count("covers")} acoustic and home-recorded covers, spanning over 20 years.</p>
+    </li>
+    <li class="music-nav-item divided-list-item">
+      <a href="/a2z/"><strong>a2z Covers (2008)</strong></a>
+      <p>{count("a2z")} covers, one for every letter of the alphabet.</p>
+    </li>
+    <li class="music-nav-item divided-list-item">
+      <a href="/demos/"><strong>Demos</strong></a>
+      <p>{count("demos")} original song demos.</p>
+    </li>
+  </ul>
+  <BackLink fallback="/" label="Home" />
+</Layout>
+
+<style>
+  .music-nav-item { padding: 1.1rem 0; }
+  .music-nav-item a { font-size: 1.2rem; font-weight: 600; }
+  .music-nav-item p { margin: 0.4rem 0 0; color: var(--muted); }
+</style>

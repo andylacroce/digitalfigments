@@ -9,10 +9,11 @@ const posts = defineCollection({
   }),
 });
 
-const covers = defineCollection({
-  loader: glob({ pattern: "**/*.json", base: "./src/content/covers" }),
+const tracks = defineCollection({
+  loader: glob({ pattern: "**/*.json", base: "./src/content/tracks" }),
   schema: z.object({
     song: z.string(),
+    section: z.enum(["covers", "demos", "a2z"]),
     artist: z.string(),
     date: z.string(),
     media: z.discriminatedUnion("discriminant", [
@@ -31,4 +32,4 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { posts, covers, pages };
+export const collections = { posts, tracks, pages };

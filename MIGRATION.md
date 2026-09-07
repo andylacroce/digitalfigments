@@ -569,6 +569,52 @@ deployed on Vercel. Content lives as files in this repo. Chosen because:
   and `tranquility` (a post with an embedded video) all open with zero
   errors now.
 
+## Session updates, part 11 (2026-09-07, unified covers/demos/a2z into one collection)
+
+- **Unified `/covers/`, `/demos/`, `/a2z/` into a single `tracks` content
+  collection** (replacing `covers` + the freeform `demos.mdx`/`a2z.mdx`
+  pages), rendered through one shared `TrackList.astro` component, so all
+  three pages are now visually and structurally identical — title → artist
+  → date above the player, then a consistent divider between entries.
+  Previously each page had its own ad-hoc formatting (`demos`/`a2z` were
+  raw MDX with markdown `* * *` horizontal rules between entries and
+  captions in inconsistent positions; `covers` was already a structured
+  JSON collection with title/artist/date above the player).
+- Schema: `tracks/*.json` — `song`, `section` (`covers`/`demos`/`a2z`,
+  determines which page it appears on and sorts independently within that
+  section), `artist` (blank for demos — those are originals), `date`
+  (free text), `media` (audio file or embed URL, same conditional field as
+  before), `order`.
+- **Migration**: the 32 existing `covers/*.json` files moved to
+  `tracks/*.json` with `section: "covers"` added. `demos.mdx`'s 7 tracks
+  and `a2z.mdx`'s 26 tracks were parsed out of their raw MDX/HTML and
+  converted to the same JSON shape. For `a2z`, the original captions were
+  lowercase `"artist - song"` text (e.g. `"denver, john - country
+  roads"`) — split into proper `artist`/`song` fields, with 6 "Lastname,
+  Firstname" artist credits reordered to "Firstname Lastname" and casing
+  cleaned up by hand (not naive title-casing, to avoid mangling the one
+  genuine acronym, EWBCST, or other band-name conventions like "CCR" /
+  "XTC" / "U2").
+- `src/pages/covers.astro`, `demos.astro`, `a2z.astro` each just fetch
+  their section of `tracks` and hand it to `<TrackList>`; `a2z.astro` also
+  keeps its page-specific intro (download-all `.zip` link, header image)
+  as hardcoded markup, since that's framing for the page, not a track.
+- `content.config.ts` / `keystatic.config.ts`: `covers` collection renamed
+  and reshaped to `tracks` (added `section` field, kept everything else).
+  Verified in Keystatic: the new collection loads with all 65 entries;
+  all three pages render identically structured lists with zero errors.
+- Old `demos.mdx`/`a2z.mdx` deleted from the `pages` collection (they're
+  now full Astro routes backed by `tracks`, not freeform content pages) —
+  this also fully retires the `figcaption`-in-MDX problem from part 10,
+  since a2z no longer has any raw HTML in its content at all.
+- **Separately**: fixed the photo gallery grid using `auto-fill` instead
+  of `auto-fit` for its grid columns — `auto-fill` reserves empty tracks
+  even when a post has fewer images than would fill a row, so e.g. a
+  2-image post showed two small tiles with wasted space alongside them
+  instead of each image stretching to fill the row. One-word CSS fix
+  (`src/styles/global.css`, both the desktop and the 480px breakpoint
+  rule).
+
 ## Explicitly NOT done
 
 - Actually decommissioning the WordPress/IIS box (removing the sites,

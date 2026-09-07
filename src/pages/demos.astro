@@ -5,16 +5,13 @@ import BackLink from "../components/BackLink.astro";
 import TrackList from "../components/TrackList.astro";
 
 const tracks = (await getCollection("tracks"))
-  .filter((t) => t.data.section === "covers")
+  .filter((t) => t.data.section === "demos")
   .sort((a, b) => a.data.order - b.data.order)
   .map((t) => t.data);
 ---
 
-<Layout
-  title="Covers"
-  description="A song-cover archive — acoustic and home-recorded covers by Andy Lacroce."
->
-  <h1>Covers</h1>
+<Layout title="Demos" description="Original song demos by Andy Lacroce.">
+  <h1>Demos</h1>
   <TrackList tracks={tracks} />
-  <BackLink fallback="/" label="Home" />
+  <BackLink fallback="/music/" label="Music" />
 </Layout>

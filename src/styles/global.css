@@ -219,7 +219,10 @@ main blockquote {
    the full grid width so they aren't squeezed into a column. */
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  /* auto-fit (not auto-fill) collapses empty tracks, so a post with only
+     2-3 images has them stretch to fill the row instead of sitting as
+     small tiles with unused space alongside them. */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 0.6rem;
 }
 .gallery > *:not(.gallery-item) {
@@ -325,7 +328,7 @@ article > :last-child {
   main { padding: 0 1rem 3rem; }
   footer { padding: 1.5rem 1rem 2rem; }
   main h1 { font-size: 1.6rem; }
-  .gallery { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 0.4rem; }
+  .gallery { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 0.4rem; }
   .gallery-item img { height: 150px; }
   .lightbox { padding: 1.25rem 0.75rem; }
   .lightbox-close { top: 0.5rem; right: 0.75rem; }
