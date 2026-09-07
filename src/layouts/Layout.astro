@@ -61,7 +61,7 @@ const fullTitle = `${title} · ${SITE_NAME}`;
     />
     <script is:inline>
       (function () {
-        var stored = localStorage.getItem("theme");
+        const stored = localStorage.getItem("theme");
         if (stored) document.documentElement.setAttribute("data-theme", stored);
       })();
     </script>
@@ -86,7 +86,7 @@ const fullTitle = `${title} · ${SITE_NAME}`;
       <slot />
     </main>
     <footer>
-      <p>Curated by Andy Lacroce</p>
+      <p>Curated by Andy Lacroce &middot; <a href="/privacy-policy/">Privacy Policy</a></p>
     </footer>
     <div id="lightbox" class="lightbox" hidden>
       <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
@@ -94,12 +94,12 @@ const fullTitle = `${title} · ${SITE_NAME}`;
     </div>
     <script is:inline>
       (function () {
-        var root = document.documentElement;
+        const root = document.documentElement;
         document.getElementById("theme-toggle").addEventListener("click", function () {
-          var current =
-            root.getAttribute("data-theme") ||
-            (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-          var next = current === "dark" ? "light" : "dark";
+          const current =
+      root.getAttribute("data-theme") ||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          const next = current === "dark" ? "light" : "dark";
           root.setAttribute("data-theme", next);
           localStorage.setItem("theme", next);
         });
@@ -109,7 +109,7 @@ const fullTitle = `${title} · ${SITE_NAME}`;
       // Uses its own short, eased animation rather than native smooth-scroll,
       // which on a long page can feel sluggish and varies by browser.
       (function () {
-        var btn = document.getElementById("back-to-top");
+        const btn = document.getElementById("back-to-top");
         function onScroll() {
           btn.hidden = window.scrollY < 400;
         }
@@ -126,21 +126,21 @@ const fullTitle = `${title} · ${SITE_NAME}`;
           // native smooth-scrolls instead of the instant per-frame jumps this
           // needs. Overriding via inline style (higher specificity than the
           // stylesheet rule) for the duration of the animation fixes it.
-          var htmlEl = document.documentElement;
-          var prevScrollBehavior = htmlEl.style.scrollBehavior;
+          const htmlEl = document.documentElement;
+          const prevScrollBehavior = htmlEl.style.scrollBehavior;
           htmlEl.style.scrollBehavior = "auto";
 
           function restore() {
             htmlEl.style.scrollBehavior = prevScrollBehavior;
           }
 
-          var startY = window.scrollY;
-          var startTime = null;
-          var duration = 350;
+          const startY = window.scrollY;
+          let startTime = null;
+          const duration = 350;
           function step(now) {
             if (startTime === null) startTime = now;
-            var t = Math.min((now - startTime) / duration, 1);
-            var eased = 1 - Math.pow(1 - t, 3);
+            const t = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 3);
             window.scrollTo(0, startY * (1 - eased));
             if (t < 1) {
               requestAnimationFrame(step);
@@ -168,23 +168,23 @@ const fullTitle = `${title} · ${SITE_NAME}`;
           );
         }
 
-        var galleries = [];
+        const galleries = [];
 
         document.querySelectorAll("article, .post-body").forEach(function (container) {
-          var children = Array.prototype.slice.call(container.children);
-          var i = 0;
+          const children = Array.prototype.slice.call(container.children);
+          let i = 0;
           while (i < children.length) {
             if (!isImageParagraph(children[i])) {
               i++;
               continue;
             }
-            var j = i + 1;
+            let j = i + 1;
             while (j < children.length && isImageParagraph(children[j])) j++;
             if (j - i >= 2) {
-              var wrapper = document.createElement("div");
+              const wrapper = document.createElement("div");
               wrapper.className = "gallery";
               container.insertBefore(wrapper, children[i]);
-              for (var k = i; k < j; k++) {
+              for (let k = i; k < j; k++) {
                 children[k].classList.add("gallery-item");
                 wrapper.appendChild(children[k]);
               }
@@ -196,20 +196,20 @@ const fullTitle = `${title} · ${SITE_NAME}`;
 
         if (!galleries.length) return;
 
-        var ROW = 4; // px — grid-auto-rows unit; fine enough that rounding is invisible
+        const ROW = 4; // px — grid-auto-rows unit; fine enough that rounding is invisible
 
         function place(item) {
-          var img = item.children[0];
-          var ratio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 0.75;
-          var gap = parseFloat(getComputedStyle(item.parentElement).columnGap) || 0;
-          var span = Math.ceil((item.clientWidth * ratio + gap) / ROW);
+          const img = item.children[0];
+          const ratio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 0.75;
+          const gap = parseFloat(getComputedStyle(item.parentElement).columnGap) || 0;
+          const span = Math.ceil((item.clientWidth * ratio + gap) / ROW);
           item.style.gridRowEnd = "span " + span;
           item.classList.add("is-visible");
         }
 
         galleries.forEach(function (gallery) {
           Array.prototype.forEach.call(gallery.children, function (item) {
-            var img = item.children[0];
+            const img = item.children[0];
             if (img.complete) {
               place(item);
             } else {
@@ -219,7 +219,7 @@ const fullTitle = `${title} · ${SITE_NAME}`;
           });
         });
 
-        var resizeTimer;
+        let resizeTimer;
         window.addEventListener("resize", function () {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(function () {
@@ -232,8 +232,8 @@ const fullTitle = `${title} · ${SITE_NAME}`;
 
       // Click any post image to view it enlarged.
       (function () {
-        var lightbox = document.getElementById("lightbox");
-        var lightboxImg = document.getElementById("lightbox-img");
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightbox-img");
 
         function open(src, alt) {
           lightboxImg.src = src;
