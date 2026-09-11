@@ -1,4 +1,6 @@
 ---
+import { mediaUrl } from "../lib/media";
+
 interface Track {
   song: string;
   artist: string;
@@ -20,9 +22,9 @@ const { tracks } = Astro.props;
         {data.date && <span class="track-date">({data.date})</span>}
       </p>
       {data.media.discriminant === "audio" ? (
-        <audio controls src={data.media.value} />
+        <audio controls src={mediaUrl(data.media.value)} />
       ) : data.media.value.match(/\.(mp4|webm|mov)$/i) ? (
-        <video controls src={data.media.value} />
+        <video controls src={mediaUrl(data.media.value)} />
       ) : (
         <a href={data.media.value} target="_blank" rel="noreferrer">{data.media.value}</a>
       )}

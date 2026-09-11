@@ -18,6 +18,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "ci": "node scripts/run-ci.mjs",
+    "sync-media": "node scripts/sync-media.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -60,7 +61,7 @@
     "path-to-regexp": "6.3.0"
   },
   "lint-staged": {
-    "*": "secretlint",
+    "*.{js,mjs,cjs,ts,tsx,astro,json,md,mdx,yml,yaml,css}": "secretlint",
     "*.{js,mjs,cjs,ts,tsx,astro}": "eslint --max-warnings=0"
   }
 }

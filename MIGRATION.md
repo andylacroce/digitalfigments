@@ -91,6 +91,24 @@ content" section for day-to-day usage.
 - **`/old-site/`** (the legacy static band site) is served but not linked
   from anywhere in the current nav — undecided if/where it should be
   discoverable.
+- **R2 media isn't on a real CDN yet**: it's served from the bucket's
+  `r2.dev` public URL (`pub-5d33fff496254a2a8c09165a5d5ff997.r2.dev`),
+  which Cloudflare's own docs describe as a rate-limited debug endpoint —
+  "not cached at the edge... should be treated as a debug hostname, not a
+  production CDN." Fine for this site's traffic level today, but the
+  documented production path is a custom domain (e.g.
+  `media.digitalfigments.com`) attached to the bucket, which does get edge
+  caching. Investigated attaching one: since `digitalfigments.com`'s DNS
+  is on Vercel (not Cloudflare), that requires Cloudflare's CNAME-based
+  "partial setup" for a subdomain zone — which turns out to require a
+  Business or Enterprise Cloudflare plan, not Free. The actual free path
+  is moving `digitalfigments.com`'s whole DNS to Cloudflare (a normal,
+  well-supported "Cloudflare in front of Vercel" setup, and how most sites
+  that get R2 edge caching for free actually do it) — a deliberate,
+  bounded migration (recreate every existing DNS record, including mail/
+  verification TXT records and the Keystatic GitHub App callback, then
+  repoint the registrar's nameservers), not something to rush. Revisit as
+  its own project.
 - **GitHub App hygiene**: an earlier, incorrect OAuth App created during the
   Keystatic GitHub-storage setup (see changelog) was superseded by a proper
   GitHub App and is no longer referenced anywhere, but was never deleted on
@@ -304,3 +322,37 @@ a possible rollback.
     forward get the same optimization as the migrated library.
   - Audio/video/zip files stayed in `public/media` untouched — this only
     affects photos.
+
+### 2026-09-11
+
+- **Moved audio/video/zip off Vercel's deployment storage**
+  - Deployment Storage (the sum of build output across every retained
+    deployment, not just the live one) hit ~24GB against the Hobby plan's
+    free quota. Root cause: `public/media` (426MB of raw audio/video, plus
+    a 98MB zip) was getting bundled into every single deployment — Astro
+    copies `public/` byte-for-byte into build output, and there's no
+    optimization pass for these formats the way there is for images (see
+    the 2026-09-07 entry above), so they were always served as-is.
+  - Cleared the existing backlog: removed all 43 stale deployments via
+    `vercel remove` (kept the one live production deployment), and set
+    deployment retention to 1 day in Vercel project settings so it can't
+    reaccumulate.
+  - Relocated `public/media` to `assets/media` (still git-tracked — commit
+    history remains the source of truth) so it's outside `public/` and
+    never bundled into a deployment again. `scripts/sync-media.mjs` mirrors
+    `assets/media/` and `assets/covers-audio/` to a Cloudflare R2 bucket,
+    diffing by content hash against a git-tracked manifest
+    (`assets/.media-manifest.json`) so only new/changed files upload.
+    Wired into `.husky/pre-commit`, so committing a new audio/video file
+    syncs it to R2 automatically; a no-op (no network call) on any commit
+    that doesn't touch those directories.
+  - Added `src/lib/media.ts` (`mediaUrl()`) to resolve stored `/media/...`
+    and `/covers-audio/...` paths against the R2 bucket's public URL
+    (`PUBLIC_MEDIA_BASE_URL` env var) at render time; used by `TrackList`,
+    `a2z.astro`, and the 6 posts with embedded audio/video.
+  - Updated Keystatic's `tracks` audio field to write new uploads to
+    `assets/covers-audio` instead of `public/covers-audio`, so future
+    CMS-authored tracks don't reintroduce the same problem.
+  - Removed the now-dead `/media/(.*)` and `/covers-audio/(.*)` cache
+    header rules from `vercel.json` — nothing is served from those paths
+    through Vercel anymore.

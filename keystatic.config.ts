@@ -99,9 +99,13 @@ export default config({
             defaultValue: 'audio',
           }),
           {
+            // Not under public/ — files here get swept into every Vercel
+            // deployment forever (see MIGRATION.md). scripts/sync-media.mjs
+            // mirrors this directory to R2; mediaUrl() resolves the stored
+            // '/covers-audio/...' path against the R2 bucket at render time.
             audio: fields.file({
               label: 'Audio file',
-              directory: 'public/covers-audio',
+              directory: 'assets/covers-audio',
               publicPath: '/covers-audio/',
             }),
             embed: fields.url({ label: 'Video URL' }),

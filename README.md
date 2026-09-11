@@ -58,6 +58,36 @@ Keystatic just reads/writes plain files — you can also edit
 `src/content/pages/*.mdx` directly and `git push`. Same result, useful for
 bulk edits or anything easier to script than click through.
 
+## Media assets (audio/video/zip)
+
+Audio, video, and the a2z `.zip` live in `assets/media/` and
+`assets/covers-audio/` — git-tracked like everything else, but deliberately
+**not** under `public/`. Astro copies `public/` byte-for-byte into every
+single deployment Vercel retains, and these files (426MB+) blew past the
+Hobby plan's free storage quota that way (see MIGRATION.md's 2026-09-11
+entry). Instead they're served from a Cloudflare R2 bucket
+(`digitalfigments-media`), resolved at render time by `mediaUrl()`
+(`src/lib/media.ts`) against the `PUBLIC_MEDIA_BASE_URL` env var.
+
+- **Adding new audio** (via Keystatic's Tracks collection, or the CMS image
+  field) writes into `assets/covers-audio/` on disk as normal.
+- **Committing** a new/changed file under `assets/media/` or
+  `assets/covers-audio/` triggers `scripts/sync-media.mjs` via
+  `.husky/pre-commit`, which uploads just that file to R2 (diffed by
+  content hash against `assets/.media-manifest.json`, also git-tracked) and
+  folds the manifest update into the same commit. A commit that doesn't
+  touch those directories skips the check entirely — no network call.
+- Requires `wrangler` to be logged in locally (`npx wrangler login`, once)
+  — the hook shells out to it to perform the upload.
+- `npm run sync-media -- --all` rescans and re-syncs everything (the
+  initial bulk migration used this; also useful after editing files
+  outside a normal commit flow, or if the manifest ever drifts).
+- Local dev needs `PUBLIC_MEDIA_BASE_URL` set in `.env` (not committed) to
+  actually hear/see this media — without it, `mediaUrl()` falls back to
+  the old `/media/...` relative path, which no longer resolves to
+  anything now that these files are outside `public/`. Same var is set in
+  Vercel's Production and Preview environments.
+
 ## Site sections and what's exposed
 
 - **Home (`/`, paginated)** and **`/covers/`** — linked from the header/nav,
@@ -103,9 +133,10 @@ src/
 
 keystatic.config.ts   CMS schema — storage: github, repo andylacroce/digitalfigments
 scripts/migrate-wp-content.mjs   one-time WP → Astro converter, re-runnable
-vercel.json            security headers, media cache headers
-public/media/          post/page media
-public/covers-audio/   Keystatic-uploaded cover audio
+scripts/sync-media.mjs   mirrors assets/media|covers-audio to R2 — see "Media assets" below
+vercel.json            security headers
+assets/media/          post/page audio, video, and the a2z zip (git-tracked, mirrored to R2)
+assets/covers-audio/   Keystatic-uploaded cover audio (git-tracked, mirrored to R2)
 public/old-site/       legacy 2000s static band site, preserved as-is
 ```
 
@@ -129,6 +160,7 @@ that scope applied. That's why all site CSS lives in the plain, unscoped
 | `npm run test:coverage` | Unit tests with the coverage gate (90%) |
 | `npm run test:e2e` | Playwright E2E tests (gallery, lightbox, theme toggle, back-to-top) — builds first, then serves `dist/client` |
 | `npm run ci` | The full pipeline above, in order, stopping at the first failure — the single command CI runs |
+| `npm run sync-media` | Mirror `assets/media`/`assets/covers-audio` to R2 — see "Media assets" above. Runs automatically (scoped to just-staged files) via pre-commit; `-- --all` forces a full rescan |
 
 The whole site prerenders to static HTML even though the Vercel adapter is
 installed (for its function/output shape, not SSR), so `npm run preview`
@@ -141,10 +173,12 @@ to serve. To preview a production build locally, run `npm run build` then
 `npm run ci` (`.github/workflows/ci.yml`) is the single source of truth for
 whether a change is done — lint, markdown lint, typecheck, unit tests (90%
 coverage gate), build, then E2E, stopping at the first failure. A pre-commit
-hook (`.husky/pre-commit`, via `lint-staged`) runs `secretlint` on every
-staged file and ESLint on staged code files — fast, so it doesn't try to
+hook (`.husky/pre-commit`) runs `lint-staged` (`secretlint` on staged
+text/code files, ESLint on staged code files — fast, so it doesn't try to
 replace `npm run ci`, just catches secrets and obvious lint errors before
-they're committed. Dependabot (`.github/dependabot.yml`) opens grouped
+they're committed) and `scripts/sync-media.mjs` (see "Media assets" above; a
+no-op unless the commit touches `assets/media` or `assets/covers-audio`).
+Dependabot (`.github/dependabot.yml`) opens grouped
 weekly-ish PRs for npm and GitHub Actions updates, and both Dependabot
 alerts and automated security-fix PRs are enabled on the repo. Code
 scanning/secret scanning (GitHub Advanced Security) aren't available on
@@ -154,5 +188,7 @@ this private repo's plan, so `secretlint` is the closest local equivalent.
 
 Vercel project `digitalfigments` (team `andylacroces-projects`), connected
 to this GitHub repo — every push to `main` auto-deploys to production.
-`vercel.json` holds security headers and long-lived cache headers for media
-paths. No manual deploy step needed for normal content/code changes.
+`vercel.json` holds security headers and long-lived cache headers for fonts
+and the legacy `/old-site/`. Deployment retention is set to 1 day (both
+Production and Preview) in project settings, so old deployments don't pile
+up storage. No manual deploy step needed for normal content/code changes.
