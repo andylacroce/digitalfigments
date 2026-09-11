@@ -121,7 +121,12 @@ async function main() {
             `--content-type=${contentType}`,
             "--remote",
           ],
-          { cwd: repoRoot, stdio: "inherit" }
+          // shell: true works around a Node/Windows spawnSync EINVAL on
+          // long-running npx.cmd children (surfaced on Node 26); args are
+          // all script-controlled (bucket/key/file/contentType), not user
+          // input, so the shell-escaping caveat this normally warns about
+          // doesn't apply here.
+          { cwd: repoRoot, stdio: "inherit", shell: process.platform === "win32" }
         );
         break;
       } catch (err) {

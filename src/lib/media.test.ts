@@ -1,13 +1,31 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { mediaUrl } from "./media";
 
+const originalDev = import.meta.env.DEV;
+
+afterEach(() => {
+  import.meta.env.DEV = originalDev;
+});
+
 describe("mediaUrl", () => {
-  it("resolves a /media/ path against the configured base URL", () => {
-    expect(mediaUrl("/media/2016/07/song.mp3").endsWith("/media/2016/07/song.mp3")).toBe(true);
+  it("resolves a /media/ path against the CDN base URL outside dev", () => {
+    import.meta.env.DEV = false;
+    expect(mediaUrl("/media/2016/07/song.mp3")).toBe(
+      `${import.meta.env.PUBLIC_MEDIA_BASE_URL ?? ""}/media/2016/07/song.mp3`
+    );
   });
 
-  it("resolves a /covers-audio/ path against the configured base URL", () => {
-    expect(mediaUrl("/covers-audio/song.mp3").endsWith("/covers-audio/song.mp3")).toBe(true);
+  it("resolves a /covers-audio/ path against the CDN base URL outside dev", () => {
+    import.meta.env.DEV = false;
+    expect(mediaUrl("/covers-audio/song.mp3")).toBe(
+      `${import.meta.env.PUBLIC_MEDIA_BASE_URL ?? ""}/covers-audio/song.mp3`
+    );
+  });
+
+  it("uses the bare path in dev, so the dev-server middleware serves it from disk", () => {
+    import.meta.env.DEV = true;
+    expect(mediaUrl("/media/2016/07/song.mp3")).toBe("/media/2016/07/song.mp3");
+    expect(mediaUrl("/covers-audio/song.mp3")).toBe("/covers-audio/song.mp3");
   });
 
   it("leaves other paths (e.g. external embed URLs) untouched", () => {

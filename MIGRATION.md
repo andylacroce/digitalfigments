@@ -363,3 +363,46 @@ a possible rollback.
   end-to-end (a manual `sync-media.mjs --all` run using the same
   token-based auth the Action uses reported `0 uploaded, 71 unchanged`, and
   a scratch object upload/delete round-trip confirmed write access).
+- **Fixed the deploy-race between Vercel and the sync workflow** — both
+  fired off the same push with no ordering guarantee, so a newly-published
+  track's page could go live on Vercel before `sync-media.yml` finished
+  uploading its file to R2 (brief 404 window). `vercel.json`'s
+  `ignoreCommand` now makes Vercel skip its own auto-deploy for any commit
+  touching `assets/media`/`assets/covers-audio` (`git diff --quiet HEAD^
+  HEAD -- <paths>`, inverted since Vercel's convention is exit 0 = skip);
+  `sync-media.yml`'s last step (`if: always()`, so a sync failure doesn't
+  leave the commit permanently undeployed) calls a Vercel deploy hook
+  itself once the sync attempt is done, so the real deploy always lands
+  after R2 is current. Verified Vercel's exit-code convention and clone
+  depth (`--depth=10`, so `HEAD^` is always available) against Vercel's own
+  docs before shipping, given a wrong polarity here could have silently
+  stopped all future deploys.
+- **Local dev no longer needs R2 at all** — previously, `mediaUrl()` always
+  resolved through the CDN even in `astro dev`, so a file you'd just added
+  locally 404'd until manually synced. `astro.config.mjs` now runs a
+  dev-only middleware serving `assets/media`/`assets/covers-audio`
+  straight from disk under those same paths; `mediaUrl()` checks
+  `import.meta.env.DEV` and leaves the path relative instead of prefixing
+  the CDN domain when true. Verified end-to-end (file-size integrity,
+  404 fallthrough for missing files, path-traversal rejection, and that no
+  CDN domain leaks into dev-rendered HTML) — a real build is unaffected,
+  `DEV` is always false there.
+- **Flattened `assets/media/`** — the `YYYY/MM/` nesting was inherited
+  verbatim from WordPress's old upload-date folder convention and wasn't
+  used by anything; asked to clean it up. Flattened all 71 files to
+  `assets/media/<filename>` (one exact byte-for-byte duplicate,
+  `JohnnyAppleseed.mp3`, existed under two different dates — collapsed to
+  a single file both the post and the track entry now reference), rewrote
+  all 71 references across 6 MDX posts, ~64 track JSON files, and
+  `a2z.astro`, cleared and rebuilt `.media-manifest.json` against the new
+  flat keys, re-synced all 70 files to R2 under their new keys, and
+  explicitly deleted all 71 old nested-path objects from R2 (verified via
+  a direct origin read, bypassing the CDN cache, that each is actually
+  gone — not just evicted from cache). Also fixed a `spawnSync npx.cmd
+  EINVAL` in `sync-media.mjs` surfaced by this bulk run — a Node
+  26/Windows regression spawning long-running `.cmd` children without a
+  shell; worked around with `shell: true` on Windows only (script-controlled
+  args, not user input, so the usual shell-escaping risk doesn't apply).
+  After an unrelated mid-run interruption, verified no corruption:
+  compared all 70 files' sizes between local disk and R2 directly (not
+  just via the CDN), zero mismatches.

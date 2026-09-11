@@ -4,6 +4,10 @@ name: Sync media to R2
 # uploads commit straight to GitHub via its API, bypassing any local git
 # hooks entirely. This mirrors assets/media|covers-audio to R2 whenever a
 # push to main actually touches them (see README's "Media assets" section).
+#
+# vercel.json's ignoreCommand skips Vercel's own auto-deploy for commits
+# touching these paths, so the "Trigger Vercel deploy" step below is what
+# actually deploys them — after R2 has the file, not racing against it.
 on:
   push:
     branches: [main]
@@ -39,3 +43,11 @@ jobs:
             git commit -m "chore: update media manifest [skip ci]"
             git push
           fi
+
+      # Runs even if the sync step above failed, so a transient R2/wrangler
+      # error doesn't leave the commit permanently undeployed (worst case:
+      # the newest file 404s until a later sync run catches it up, same as
+      # before this workflow existed).
+      - name: Trigger Vercel deploy
+        if: always()
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"

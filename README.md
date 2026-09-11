@@ -92,11 +92,24 @@ now lives on Cloudflare), resolved at render time by `mediaUrl()`
 - `npm run sync-media -- --all` rescans and re-syncs everything (the
   initial bulk migration used this; also useful after editing files
   outside a normal commit flow, or if the manifest ever drifts).
-- Local dev needs `PUBLIC_MEDIA_BASE_URL` set in `.env` (not committed) to
-  actually hear/see this media — without it, `mediaUrl()` falls back to
-  the old `/media/...` relative path, which no longer resolves to
-  anything now that these files are outside `public/`. Same var is set in
-  Vercel's Production and Preview environments.
+- **Local dev doesn't touch R2 at all.** `astro.config.mjs` runs a dev-only
+  middleware that serves `assets/media/` and `assets/covers-audio/`
+  straight from disk under those same paths — `mediaUrl()` (`src/lib/
+  media.ts`) detects `import.meta.env.DEV` and leaves the path relative
+  instead of prefixing the CDN domain. So a file you just added plays
+  immediately in `npm run dev`, no sync step needed first, no `.env`
+  required for this specifically. This only ever runs in dev — a real
+  build always resolves through `PUBLIC_MEDIA_BASE_URL` as normal, and
+  nothing here changes what ships in a deployment.
+- **Vercel's own auto-deploy is skipped for commits touching media.**
+  `vercel.json`'s `ignoreCommand` checks the pushed commit's diff and
+  tells Vercel to stand down when it touches `assets/media` or
+  `assets/covers-audio` — otherwise Vercel could deploy a page
+  referencing a file R2 doesn't have yet, racing the sync workflow above.
+  Instead, `sync-media.yml`'s last step calls a Vercel deploy hook itself
+  once the sync (succeeds or fails) is done, so the real deploy always
+  lands after R2 is up to date. `PUBLIC_MEDIA_BASE_URL` is set in
+  Vercel's Production and Preview environments for the resulting build.
 
 ## Site sections and what's exposed
 
