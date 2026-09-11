@@ -91,24 +91,6 @@ content" section for day-to-day usage.
 - **`/old-site/`** (the legacy static band site) is served but not linked
   from anywhere in the current nav — undecided if/where it should be
   discoverable.
-- **R2 media isn't on a real CDN yet**: it's served from the bucket's
-  `r2.dev` public URL (`pub-5d33fff496254a2a8c09165a5d5ff997.r2.dev`),
-  which Cloudflare's own docs describe as a rate-limited debug endpoint —
-  "not cached at the edge... should be treated as a debug hostname, not a
-  production CDN." Fine for this site's traffic level today, but the
-  documented production path is a custom domain (e.g.
-  `media.digitalfigments.com`) attached to the bucket, which does get edge
-  caching. Investigated attaching one: since `digitalfigments.com`'s DNS
-  is on Vercel (not Cloudflare), that requires Cloudflare's CNAME-based
-  "partial setup" for a subdomain zone — which turns out to require a
-  Business or Enterprise Cloudflare plan, not Free. The actual free path
-  is moving `digitalfigments.com`'s whole DNS to Cloudflare (a normal,
-  well-supported "Cloudflare in front of Vercel" setup, and how most sites
-  that get R2 edge caching for free actually do it) — a deliberate,
-  bounded migration (recreate every existing DNS record, including mail/
-  verification TXT records and the Keystatic GitHub App callback, then
-  repoint the registrar's nameservers), not something to rush. Revisit as
-  its own project.
 - **GitHub App hygiene**: an earlier, incorrect OAuth App created during the
   Keystatic GitHub-storage setup (see changelog) was superseded by a proper
   GitHub App and is no longer referenced anywhere, but was never deleted on
@@ -356,3 +338,28 @@ a possible rollback.
   - Removed the now-dead `/media/(.*)` and `/covers-audio/(.*)` cache
     header rules from `vercel.json` — nothing is served from those paths
     through Vercel anymore.
+- **R2 media now on a real CDN** — `digitalfigments.com`'s DNS was moved to
+  Cloudflare's nameservers (the "phase 2" deferred in the entry above),
+  which unblocked attaching a proper custom domain,
+  `media.digitalfigments.com`, to the R2 bucket via
+  `wrangler r2 bucket domain add` (needed the zone ID from the dashboard —
+  the wrangler OAuth token only carries `zone:read`, not `zone:edit`, so it
+  can't look zones up itself). Verified edge caching is live: a fetch
+  through the new domain returns `cf-cache-status` and
+  `Cache-Control: max-age=14400` headers that `r2.dev` never sent.
+  `PUBLIC_MEDIA_BASE_URL` (local `.env`, plus Vercel's Production/Preview
+  env vars) and `vercel.json`'s CSP `media-src` were repointed from
+  `pub-5d33fff496254a2a8c09165a5d5ff997.r2.dev` to
+  `media.digitalfigments.com`.
+- **Closed the Keystatic-upload sync gap** — the pre-commit hook only ever
+  covers local commits; Keystatic's GitHub-storage mode commits straight to
+  GitHub via API, bypassing it entirely. Added
+  `.github/workflows/sync-media.yml`: on push to `main` touching
+  `assets/media/**` or `assets/covers-audio/**`, it reruns
+  `sync-media.mjs --all` (content-hash diffed against the same manifest, so
+  it's still a no-op for unchanged files) and commits the updated manifest
+  back. Needs `CLOUDFLARE_API_TOKEN` (Account → Workers R2 Storage → Edit)
+  and `CLOUDFLARE_ACCOUNT_ID` as repo secrets — both added and verified
+  end-to-end (a manual `sync-media.mjs --all` run using the same
+  token-based auth the Action uses reported `0 uploaded, 71 unchanged`, and
+  a scratch object upload/delete round-trip confirmed write access).

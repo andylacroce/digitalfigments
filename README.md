@@ -66,17 +66,27 @@ Audio, video, and the a2z `.zip` live in `assets/media/` and
 single deployment Vercel retains, and these files (426MB+) blew past the
 Hobby plan's free storage quota that way (see MIGRATION.md's 2026-09-11
 entry). Instead they're served from a Cloudflare R2 bucket
-(`digitalfigments-media`), resolved at render time by `mediaUrl()`
+(`digitalfigments-media`) through its custom domain,
+`media.digitalfigments.com` (real edge caching — `digitalfigments.com`'s DNS
+now lives on Cloudflare), resolved at render time by `mediaUrl()`
 (`src/lib/media.ts`) against the `PUBLIC_MEDIA_BASE_URL` env var.
 
 - **Adding new audio** (via Keystatic's Tracks collection, or the CMS image
-  field) writes into `assets/covers-audio/` on disk as normal.
-- **Committing** a new/changed file under `assets/media/` or
-  `assets/covers-audio/` triggers `scripts/sync-media.mjs` via
-  `.husky/pre-commit`, which uploads just that file to R2 (diffed by
-  content hash against `assets/.media-manifest.json`, also git-tracked) and
-  folds the manifest update into the same commit. A commit that doesn't
-  touch those directories skips the check entirely — no network call.
+  field) writes into `assets/covers-audio/` on disk as normal — Keystatic
+  commits straight to GitHub via its API, bypassing any local git hooks.
+- **Local commits** touching `assets/media/` or `assets/covers-audio/`
+  trigger `scripts/sync-media.mjs` via `.husky/pre-commit`, which uploads
+  just the changed file(s) to R2 (diffed by content hash against
+  `assets/.media-manifest.json`, also git-tracked) and folds the manifest
+  update into the same commit. A commit that doesn't touch those
+  directories skips the check entirely — no network call.
+- **Keystatic's GitHub-API commits** don't run that hook, so
+  `.github/workflows/sync-media.yml` covers the same ground server-side:
+  on any push to `main` touching those directories, it re-runs
+  `sync-media.mjs --all` (content-hash diffed, so still only uploads what
+  actually changed) and commits the updated manifest back. Needs
+  `CLOUDFLARE_API_TOKEN` (Account → Workers R2 Storage → Edit) and
+  `CLOUDFLARE_ACCOUNT_ID` set as repo secrets.
 - Requires `wrangler` to be logged in locally (`npx wrangler login`, once)
   — the hook shells out to it to perform the upload.
 - `npm run sync-media -- --all` rescans and re-syncs everything (the
@@ -192,3 +202,10 @@ to this GitHub repo — every push to `main` auto-deploys to production.
 and the legacy `/old-site/`. Deployment retention is set to 1 day (both
 Production and Preview) in project settings, so old deployments don't pile
 up storage. No manual deploy step needed for normal content/code changes.
+
+DNS for `digitalfigments.com` is authoritative on Cloudflare (nameservers
+`bill.ns.cloudflare.com` / `val.ns.cloudflare.com`), with an `A` record
+pointing at Vercel — this is what makes real edge caching for the R2 media
+domain possible (see "Media assets" above). Manage DNS records (including
+`media.digitalfigments.com`, mail, and any verification `TXT` records) in
+the Cloudflare dashboard, not Vercel's domain settings.
