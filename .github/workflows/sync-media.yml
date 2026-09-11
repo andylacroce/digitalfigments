@@ -6,8 +6,13 @@ name: Sync media to R2
 # push to main actually touches them (see README's "Media assets" section).
 #
 # vercel.json's ignoreCommand skips Vercel's own auto-deploy for commits
-# touching these paths, so the "Trigger Vercel deploy" step below is what
-# actually deploys them — after R2 has the file, not racing against it.
+# touching these paths, so the deploy steps below are what actually deploy
+# them — after R2 has the file, not racing against it. Deploying via the
+# Vercel CLI (not a deploy hook) is deliberate: a deploy hook re-triggers
+# a normal git-integration build, which re-evaluates the SAME ignoreCommand
+# and gets skipped again (a documented Vercel limitation — deploy hooks and
+# ignoreCommand share one gate with no way to tell them apart). A CLI-driven
+# deploy doesn't go through that pipeline at all, so it isn't gated by it.
 on:
   push:
     branches: [main]
@@ -48,6 +53,13 @@ jobs:
       # error doesn't leave the commit permanently undeployed (worst case:
       # the newest file 404s until a later sync run catches it up, same as
       # before this workflow existed).
-      - name: Trigger Vercel deploy
+      - name: Deploy to Vercel
         if: always()
-        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN"
+          npx --yes vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN"

@@ -106,10 +106,17 @@ now lives on Cloudflare), resolved at render time by `mediaUrl()`
   tells Vercel to stand down when it touches `assets/media` or
   `assets/covers-audio` — otherwise Vercel could deploy a page
   referencing a file R2 doesn't have yet, racing the sync workflow above.
-  Instead, `sync-media.yml`'s last step calls a Vercel deploy hook itself
-  once the sync (succeeds or fails) is done, so the real deploy always
-  lands after R2 is up to date. `PUBLIC_MEDIA_BASE_URL` is set in
-  Vercel's Production and Preview environments for the resulting build.
+  Instead, `sync-media.yml`'s last step deploys via the Vercel CLI itself
+  (`vercel pull`/`build`/`deploy --prebuilt --prod`, needs `VERCEL_TOKEN`/
+  `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` as repo secrets) once the sync
+  (succeeds or fails) is done, so the real deploy always lands after R2 is
+  up to date. Deliberately not a Vercel deploy hook — a hook just
+  re-triggers a normal git-integration build, which re-evaluates the same
+  `ignoreCommand` and gets skipped too (a documented Vercel limitation: a
+  deploy hook and `ignoreCommand` share one gate, with nothing to tell
+  them apart). A CLI-driven deploy doesn't go through that pipeline at
+  all, so it isn't gated by it. `PUBLIC_MEDIA_BASE_URL` is set in Vercel's
+  Production and Preview environments for the resulting build.
 
 ## Site sections and what's exposed
 

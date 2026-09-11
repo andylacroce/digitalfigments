@@ -369,14 +369,28 @@ a possible rollback.
   uploading its file to R2 (brief 404 window). `vercel.json`'s
   `ignoreCommand` now makes Vercel skip its own auto-deploy for any commit
   touching `assets/media`/`assets/covers-audio` (`git diff --quiet HEAD^
-  HEAD -- <paths>`, inverted since Vercel's convention is exit 0 = skip);
-  `sync-media.yml`'s last step (`if: always()`, so a sync failure doesn't
-  leave the commit permanently undeployed) calls a Vercel deploy hook
-  itself once the sync attempt is done, so the real deploy always lands
-  after R2 is current. Verified Vercel's exit-code convention and clone
-  depth (`--depth=10`, so `HEAD^` is always available) against Vercel's own
-  docs before shipping, given a wrong polarity here could have silently
-  stopped all future deploys.
+  HEAD -- <paths>`, inverted since Vercel's convention is exit 0 = skip).
+  Verified Vercel's exit-code convention and clone depth (`--depth=10`, so
+  `HEAD^` is always available) against Vercel's own docs before shipping,
+  given a wrong polarity here could have silently stopped all future
+  deploys.
+  - First attempt had `sync-media.yml`'s last step call a Vercel deploy
+    hook once the sync was done. This shipped, and **didn't work**: the
+    flatten commit below landed with both the auto-deploy *and* the
+    hook-triggered build canceled, because a deploy hook just re-triggers
+    a normal git-integration build, which re-evaluates the same
+    `ignoreCommand` and gets skipped too — confirmed as a documented
+    Vercel limitation (deploy hooks and `ignoreCommand` share one gate,
+    with no way to tell them apart from inside the command). Caught
+    immediately by actually checking `vercel ls`/`vercel inspect --logs`
+    after shipping rather than assuming the hook call succeeding meant
+    the deploy did — production was briefly stuck on the prior commit
+    until a manual `vercel --prod` closed the gap. Replaced with an
+    actual Vercel CLI deploy (`vercel pull` / `build` / `deploy
+    --prebuilt --prod`, needs `VERCEL_TOKEN`/`VERCEL_ORG_ID`/
+    `VERCEL_PROJECT_ID` as repo secrets) — a CLI-driven deploy doesn't go
+    through the git-integration pipeline at all, so `ignoreCommand` never
+    sees it.
 - **Local dev no longer needs R2 at all** — previously, `mediaUrl()` always
   resolved through the CDN even in `astro dev`, so a file you'd just added
   locally 404'd until manually synced. `astro.config.mjs` now runs a
