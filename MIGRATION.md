@@ -420,3 +420,13 @@ a possible rollback.
   After an unrelated mid-run interruption, verified no corruption:
   compared all 70 files' sizes between local disk and R2 directly (not
   just via the CDN), zero mismatches.
+- **Merged `assets/covers-audio/` into `assets/media/`** — the split
+  (Keystatic-uploaded cover audio in one folder, hand-placed post/page
+  media in another) was inherited structure, not something this migration
+  introduced, and added confusion for no real benefit. Nothing had ever
+  actually been uploaded through Keystatic yet, so this was a config-only
+  change with zero real content to move: updated `keystatic.config.ts`'s
+  audio field to write to `assets/media`/`/media/` instead, removed the
+  `covers-audio` branch from `mediaUrl()`, `sync-media.mjs`'s watched
+  directories, and `astro.config.mjs`'s dev middleware. One folder, one
+  namespace, going forward.

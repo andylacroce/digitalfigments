@@ -60,8 +60,8 @@ bulk edits or anything easier to script than click through.
 
 ## Media assets (audio/video/zip)
 
-Audio, video, and the a2z `.zip` live in `assets/media/` and
-`assets/covers-audio/` — git-tracked like everything else, but deliberately
+Audio, video, and the a2z `.zip` all live flat in one directory,
+`assets/media/` — git-tracked like everything else, but deliberately
 **not** under `public/`. Astro copies `public/` byte-for-byte into every
 single deployment Vercel retains, and these files (426MB+) blew past the
 Hobby plan's free storage quota that way (see MIGRATION.md's 2026-09-11
@@ -69,20 +69,22 @@ entry). Instead they're served from a Cloudflare R2 bucket
 (`digitalfigments-media`) through its custom domain,
 `media.digitalfigments.com` (real edge caching — `digitalfigments.com`'s DNS
 now lives on Cloudflare), resolved at render time by `mediaUrl()`
-(`src/lib/media.ts`) against the `PUBLIC_MEDIA_BASE_URL` env var.
+(`src/lib/media.ts`) against the `PUBLIC_MEDIA_BASE_URL` env var. One flat
+directory for everything, deliberately — Keystatic's Tracks collection
+audio uploads land in this same `assets/media/` (not a separate
+CMS-upload folder), so there's a single namespace to reason about instead
+of a split one.
 
-- **Adding new audio** (via Keystatic's Tracks collection, or the CMS image
-  field) writes into `assets/covers-audio/` on disk as normal — Keystatic
-  commits straight to GitHub via its API, bypassing any local git hooks.
-- **Local commits** touching `assets/media/` or `assets/covers-audio/`
-  trigger `scripts/sync-media.mjs` via `.husky/pre-commit`, which uploads
-  just the changed file(s) to R2 (diffed by content hash against
-  `assets/.media-manifest.json`, also git-tracked) and folds the manifest
-  update into the same commit. A commit that doesn't touch those
-  directories skips the check entirely — no network call.
-- **Keystatic's GitHub-API commits** don't run that hook, so
-  `.github/workflows/sync-media.yml` covers the same ground server-side:
-  on any push to `main` touching those directories, it re-runs
+- **Local commits** touching `assets/media/` trigger `scripts/sync-media.mjs`
+  via `.husky/pre-commit`, which uploads just the changed file(s) to R2
+  (diffed by content hash against `assets/.media-manifest.json`, also
+  git-tracked) and folds the manifest update into the same commit. A
+  commit that doesn't touch that directory skips the check entirely — no
+  network call.
+- **Keystatic's GitHub-API commits** don't run that hook (it commits
+  straight to GitHub via its API, bypassing any local git hooks entirely),
+  so `.github/workflows/sync-media.yml` covers the same ground
+  server-side: on any push to `main` touching `assets/media/`, it re-runs
   `sync-media.mjs --all` (content-hash diffed, so still only uploads what
   actually changed) and commits the updated manifest back. Needs
   `CLOUDFLARE_API_TOKEN` (Account → Workers R2 Storage → Edit) and
@@ -93,19 +95,19 @@ now lives on Cloudflare), resolved at render time by `mediaUrl()`
   initial bulk migration used this; also useful after editing files
   outside a normal commit flow, or if the manifest ever drifts).
 - **Local dev doesn't touch R2 at all.** `astro.config.mjs` runs a dev-only
-  middleware that serves `assets/media/` and `assets/covers-audio/`
-  straight from disk under those same paths — `mediaUrl()` (`src/lib/
-  media.ts`) detects `import.meta.env.DEV` and leaves the path relative
-  instead of prefixing the CDN domain. So a file you just added plays
-  immediately in `npm run dev`, no sync step needed first, no `.env`
-  required for this specifically. This only ever runs in dev — a real
-  build always resolves through `PUBLIC_MEDIA_BASE_URL` as normal, and
-  nothing here changes what ships in a deployment.
+  middleware that serves `assets/media/` straight from disk under that
+  same path — `mediaUrl()` (`src/lib/media.ts`) detects
+  `import.meta.env.DEV` and leaves the path relative instead of prefixing
+  the CDN domain. So a file you just added plays immediately in
+  `npm run dev`, no sync step needed first, no `.env` required for this
+  specifically. This only ever runs in dev — a real build always resolves
+  through `PUBLIC_MEDIA_BASE_URL` as normal, and nothing here changes what
+  ships in a deployment.
 - **Vercel's own auto-deploy is skipped for commits touching media.**
   `vercel.json`'s `ignoreCommand` checks the pushed commit's diff and
-  tells Vercel to stand down when it touches `assets/media` or
-  `assets/covers-audio` — otherwise Vercel could deploy a page
-  referencing a file R2 doesn't have yet, racing the sync workflow above.
+  tells Vercel to stand down when it touches `assets/media` — otherwise
+  Vercel could deploy a page referencing a file R2 doesn't have yet,
+  racing the sync workflow above.
   Instead, `sync-media.yml`'s last step deploys via the Vercel CLI itself
   (`vercel pull`/`build`/`deploy --prebuilt --prod`, needs `VERCEL_TOKEN`/
   `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` as repo secrets) once the sync
@@ -163,10 +165,11 @@ src/
 
 keystatic.config.ts   CMS schema — storage: github, repo andylacroce/digitalfigments
 scripts/migrate-wp-content.mjs   one-time WP → Astro converter, re-runnable
-scripts/sync-media.mjs   mirrors assets/media|covers-audio to R2 — see "Media assets" below
+scripts/sync-media.mjs   mirrors assets/media to R2 — see "Media assets" below
 vercel.json            security headers
-assets/media/          post/page audio, video, and the a2z zip (git-tracked, mirrored to R2)
-assets/covers-audio/   Keystatic-uploaded cover audio (git-tracked, mirrored to R2)
+assets/media/          audio, video, the a2z zip, and Keystatic-uploaded
+                       cover audio — one flat directory (git-tracked,
+                       mirrored to R2)
 public/old-site/       legacy 2000s static band site, preserved as-is
 ```
 
@@ -190,7 +193,7 @@ that scope applied. That's why all site CSS lives in the plain, unscoped
 | `npm run test:coverage` | Unit tests with the coverage gate (90%) |
 | `npm run test:e2e` | Playwright E2E tests (gallery, lightbox, theme toggle, back-to-top) — builds first, then serves `dist/client` |
 | `npm run ci` | The full pipeline above, in order, stopping at the first failure — the single command CI runs |
-| `npm run sync-media` | Mirror `assets/media`/`assets/covers-audio` to R2 — see "Media assets" above. Runs automatically (scoped to just-staged files) via pre-commit; `-- --all` forces a full rescan |
+| `npm run sync-media` | Mirror `assets/media` to R2 — see "Media assets" above. Runs automatically (scoped to just-staged files) via pre-commit; `-- --all` forces a full rescan |
 
 The whole site prerenders to static HTML even though the Vercel adapter is
 installed (for its function/output shape, not SSR), so `npm run preview`
@@ -207,7 +210,7 @@ hook (`.husky/pre-commit`) runs `lint-staged` (`secretlint` on staged
 text/code files, ESLint on staged code files — fast, so it doesn't try to
 replace `npm run ci`, just catches secrets and obvious lint errors before
 they're committed) and `scripts/sync-media.mjs` (see "Media assets" above; a
-no-op unless the commit touches `assets/media` or `assets/covers-audio`).
+no-op unless the commit touches `assets/media`).
 Dependabot (`.github/dependabot.yml`) opens grouped
 weekly-ish PRs for npm and GitHub Actions updates, and both Dependabot
 alerts and automated security-fix PRs are enabled on the repo. Code

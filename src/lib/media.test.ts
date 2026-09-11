@@ -15,17 +15,9 @@ describe("mediaUrl", () => {
     );
   });
 
-  it("resolves a /covers-audio/ path against the CDN base URL outside dev", () => {
-    import.meta.env.DEV = false;
-    expect(mediaUrl("/covers-audio/song.mp3")).toBe(
-      `${import.meta.env.PUBLIC_MEDIA_BASE_URL ?? ""}/covers-audio/song.mp3`
-    );
-  });
-
   it("uses the bare path in dev, so the dev-server middleware serves it from disk", () => {
     import.meta.env.DEV = true;
     expect(mediaUrl("/media/2016/07/song.mp3")).toBe("/media/2016/07/song.mp3");
-    expect(mediaUrl("/covers-audio/song.mp3")).toBe("/covers-audio/song.mp3");
   });
 
   it("leaves other paths (e.g. external embed URLs) untouched", () => {

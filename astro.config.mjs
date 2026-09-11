@@ -13,7 +13,7 @@ import sitemap from '@astrojs/sitemap';
 
 import { siteConfig } from './src/site.config.ts';
 
-const mediaDirs = { '/media/': 'media', '/covers-audio/': 'covers-audio' };
+const mediaDirs = { '/media/': 'media' };
 /** @type {Record<string, string>} */
 const mediaContentTypes = {
   '.mp3': 'audio/mpeg',
@@ -24,10 +24,10 @@ const mediaContentTypes = {
   '.zip': 'application/zip',
 };
 
-// Dev-only: serves assets/media|covers-audio straight from disk so a
-// newly-added file is playable in `astro dev` without syncing to R2 first
-// (see src/lib/media.ts and README's "Media assets" section). Never runs
-// in a real build — assets/ stays outside public/, so nothing here changes
+// Dev-only: serves assets/media straight from disk so a newly-added file
+// is playable in `astro dev` without syncing to R2 first (see
+// src/lib/media.ts and README's "Media assets" section). Never runs in a
+// real build — assets/ stays outside public/, so nothing here changes
 // what ships in a deployment.
 function devMediaMiddleware() {
   return {

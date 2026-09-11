@@ -1,9 +1,9 @@
-// Mirrors assets/media/ and assets/covers-audio/ to the R2 bucket that
-// serves them in production (see src/lib/media.ts and MIGRATION.md). These
-// files stay committed to git as the source of truth, but must never land
-// under public/ — Vercel bundles a full copy of public/ into every single
-// deployment it retains, and that's what blew deployment storage past the
-// free quota in the first place.
+// Mirrors assets/media/ to the R2 bucket that serves it in production (see
+// src/lib/media.ts and MIGRATION.md). These files stay committed to git as
+// the source of truth, but must never land under public/ — Vercel bundles
+// a full copy of public/ into every single deployment it retains, and
+// that's what blew deployment storage past the free quota in the first
+// place.
 //
 // Default mode only looks at what's staged for commit (fast no-op on a
 // normal code-only commit); --all rescans everything, for the initial
@@ -17,7 +17,7 @@ import path from "node:path";
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const assetsRoot = path.join(repoRoot, "assets");
 const manifestPath = path.join(assetsRoot, ".media-manifest.json");
-const watchedDirs = ["media", "covers-audio"];
+const watchedDirs = ["media"];
 const bucket = process.env.R2_MEDIA_BUCKET ?? "digitalfigments-media";
 const isFullScan = process.argv.includes("--all");
 // Windows' npx is a .cmd shim — execFileSync can't resolve it without a

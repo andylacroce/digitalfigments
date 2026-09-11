@@ -2,8 +2,8 @@ name: Sync media to R2
 
 # Closes the gap the local pre-commit hook can't cover: Keystatic's CMS
 # uploads commit straight to GitHub via its API, bypassing any local git
-# hooks entirely. This mirrors assets/media|covers-audio to R2 whenever a
-# push to main actually touches them (see README's "Media assets" section).
+# hooks entirely. This mirrors assets/media to R2 whenever a push to main
+# actually touches it (see README's "Media assets" section).
 #
 # vercel.json's ignoreCommand skips Vercel's own auto-deploy for commits
 # touching these paths, so the deploy steps below are what actually deploy
@@ -18,7 +18,6 @@ on:
     branches: [main]
     paths:
       - "assets/media/**"
-      - "assets/covers-audio/**"
 
 permissions:
   contents: write
