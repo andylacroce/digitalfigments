@@ -53,8 +53,8 @@
     "secretlint": "^13.0.5",
     "serve": "^14.2.6",
     "turndown": "^7.2.4",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.69.0",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^5.0.0"
   },
   "overrides": {
