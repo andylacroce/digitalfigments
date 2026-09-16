@@ -73,6 +73,14 @@ content" section for day-to-day usage.
 
 ## Outstanding items
 
+- **`www.digitalfigments.com` needs a domain-level redirect to the apex
+  domain, set manually in the Vercel dashboard** (Project Settings →
+  Domains → Edit `www.digitalfigments.com` → Redirect to →
+  `digitalfigments.com`). Both domains currently serve the full site with no
+  redirect between them — confirmed as the cause of Search Console's
+  "Alternate page with proper canonical tag" exclusions (see 2026-09-16
+  changelog). Can't be done from `vercel.json`/code; this is a one-time
+  manual step.
 - **`obamas-audacity` page**: a genuine personal essay, not photo/media
   content, so it doesn't fit the nav or the site's framing. Kept at
   `/blog/obamas-audacity/`, undecided whether it becomes a regular post,
@@ -114,18 +122,33 @@ a possible rollback.
 
 ### 2026-09-16
 
-- **SEO: fixed the `www` duplicate-content bug and added legacy post
+- **SEO: diagnosed the `www` duplicate-content bug, added legacy post
   redirects**, prompted by Search Console reporting most of the site as
   "Discovered/Crawled — currently not indexed" or "Alternate page with
   proper canonical tag" shortly after launch.
-  - `www.digitalfigments.com` was serving a full, unredirected duplicate of
-    the site (both hostnames resolved on Vercel, only the apex was ever set
-    as canonical) — every page's `www` copy was live and getting crawled
-    against a canonical tag pointing elsewhere. Added a `www` → apex 301 in
-    `vercel.json`.
+  - `www.digitalfigments.com` was found serving a full, unredirected
+    duplicate of the site (both hostnames resolved on Vercel, only the apex
+    was ever set as canonical) — every page's `www` copy was live and
+    getting crawled against a canonical tag pointing elsewhere; confirmed
+    via GSC's sample URLs (all `www.digitalfigments.com/?attachment_id=N`,
+    old WordPress attachment links whose query string gets dropped by the
+    canonical tag, landing on the apex homepage's canonical). A `vercel.json`
+    host-matching redirect was tried first and confirmed *not* to work —
+    Vercel's own docs say cross-domain redirects between two domains on the
+    same project are a per-domain dashboard setting (**Project Settings →
+    Domains → Edit `www.digitalfigments.com` → Redirect to →
+    digitalfigments.com**), not something `vercel.json` can express. That
+    dashboard step is still outstanding (see below).
   - Added the flat pre-migration permalink → `/posts/<slug>/` (and
     `/blog/obamas-audacity/`) redirects described in "Outstanding items"
     above, via `astro.config.mjs`'s `redirects`.
+  - Considered also adding `trailingSlash: 'always'` to stop
+    `/posts/basil` and `/posts/basil/` serving as separate duplicate URLs,
+    but reverted it: the Vercel adapter's own slash-enforcing redirect runs
+    ahead of the legacy-permalink redirects above in the generated route
+    list, so it silently broke them (`/basil` → `/basil/` → 404 instead of
+    → `/posts/basil/`). Not worth the added complexity for a real but minor,
+    unconfirmed contributor to the GSC report — left as-is.
 
 ### 2026-09-06
 
