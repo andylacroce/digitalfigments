@@ -64,6 +64,25 @@ export default defineConfig({
   site: 'https://digitalfigments.com',
   redirects: {
     '/portrayal': 'https://character-chatbot-generator.vercel.app',
+    // Pre-migration WordPress permalinks were flat (/<slug>/); posts now live
+    // under /posts/<slug>/. Closed list frozen at cutover — every post
+    // created since via Keystatic has only ever had the new URL, so this
+    // never needs new entries (see MIGRATION.md's "URL redirects from the
+    // old site were never built" outstanding item).
+    ...Object.fromEntries(
+      [
+        'basil', 'baum', 'bird-of-prey', 'blue-heaven-butterfly-bush', 'cutie-petunia',
+        'dont-think-you-knew-you-were-in-this-song', 'down-by-the-river', 'fall', 'floating',
+        'forget-the-flowers', 'honk-honk', 'im-mai', 'in-bloom',
+        'johnny-appleseed-cover-of-original-song-by-gbv', 'life-is-but-a-dream', 'more-autumn-magic',
+        'mr-bluebird-on-my-shoulder', 'neverending-summer', 'note-20-ultra-doodle', 'note-5-doodles',
+        'note-8-doodles', 'note-8-doodles-2', 'note-8-doodles-3', 'note8-slop-art', 'patience',
+        'peace-lily', 'pretty-great', 'samvega', 'schnee-und-himmel', 'serenity', 'shes-pretty',
+        'shhhhhh', 'summers-last-stand', 'sunnin', 'swan-memorial-fountain-logan-square', 'tranquility',
+      ].map((slug) => [`/${slug}`, `/posts/${slug}/`])
+    ),
+    // Same reasoning: this essay lived at the WordPress site's root.
+    '/obamas-audacity': '/blog/obamas-audacity/',
   },
   // Post photos are full-resolution camera originals but display in a narrow
   // content column — 'constrained' generates a responsive srcset (plus

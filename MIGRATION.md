@@ -84,10 +84,14 @@ content" section for day-to-day usage.
   UI; that verification is done now (see the changelog), so unifying them
   via `@keystatic/core/reader` (Keystatic's documented pattern for a single
   source of truth) is worth doing when there's time.
-- **URL redirects from the old site were never built.** The old
-  `Redirection` plugin held the URL-history mapping needed to turn old links
-  into Vercel redirects; cutover happened without it; some old links may
-  404.
+- **URL redirects from the old site were never built**, beyond the post/essay
+  redirects added 2026-09-16 (see changelog) — those cover every real post's
+  old flat permalink (`/<slug>/` → `/posts/<slug>/`) and the essay page, but
+  the old `Redirection` plugin's full URL-history mapping (categories, tags,
+  feeds, and one-off WordPress attachment pages per uploaded image) was never
+  recovered, so links into those still 404. Left as-is deliberately: there's
+  no single sensible destination for that cruft, and redirecting orphaned
+  URLs to the homepage is worse for SEO than a real 404.
 - **`/old-site/`** (the legacy static band site) is served but not linked
   from anywhere in the current nav — undecided if/where it should be
   discoverable.
@@ -107,6 +111,21 @@ and won't restart on their own, but everything is still present on disk for
 a possible rollback.
 
 ## Changelog
+
+### 2026-09-16
+
+- **SEO: fixed the `www` duplicate-content bug and added legacy post
+  redirects**, prompted by Search Console reporting most of the site as
+  "Discovered/Crawled — currently not indexed" or "Alternate page with
+  proper canonical tag" shortly after launch.
+  - `www.digitalfigments.com` was serving a full, unredirected duplicate of
+    the site (both hostnames resolved on Vercel, only the apex was ever set
+    as canonical) — every page's `www` copy was live and getting crawled
+    against a canonical tag pointing elsewhere. Added a `www` → apex 301 in
+    `vercel.json`.
+  - Added the flat pre-migration permalink → `/posts/<slug>/` (and
+    `/blog/obamas-audacity/`) redirects described in "Outstanding items"
+    above, via `astro.config.mjs`'s `redirects`.
 
 ### 2026-09-06
 
