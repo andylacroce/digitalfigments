@@ -73,6 +73,21 @@ content" section for day-to-day usage.
 
 ## Outstanding items
 
+- **First Keystatic-authored production post took ~12.5 minutes for Vercel
+  to even register a deployment**, out of an ~18.5-minute total commit-to-live
+  time (2026-09-18, `watching-the-wheels` post). Confirmed via the GitHub and
+  Vercel APIs: the commit landed on GitHub normally (its own CI check-run
+  fired immediately), but no Vercel deployment record existed for that SHA
+  for over 12 minutes, then one appeared and queued on its own — nobody
+  triggered it manually. GitHub App installation and Vercel's Git connection
+  were both manually checked and look healthy, so this reads as a delayed
+  webhook delivery (GitHub retries failed deliveries automatically) rather
+  than a config problem. The build itself, once started, was ~2 minutes and
+  not the bottleneck — image caching (Astro's built-in per-image build cache)
+  worked correctly, reusing 686 of 687 images and only processing the one
+  genuinely new photo. Unresolved: whether this recurs on future
+  Keystatic-authored commits. If it does, escalate to Vercel support — it's
+  not something fixable from this repo.
 - **`www.digitalfigments.com` needs a domain-level redirect to the apex
   domain, set manually in the Vercel dashboard** (Project Settings →
   Domains → Edit `www.digitalfigments.com` → Redirect to →
