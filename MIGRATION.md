@@ -88,14 +88,20 @@ content" section for day-to-day usage.
   genuinely new photo. Unresolved: whether this recurs on future
   Keystatic-authored commits. If it does, escalate to Vercel support — it's
   not something fixable from this repo.
-- **`www.digitalfigments.com` needs a domain-level redirect to the apex
-  domain, set manually in the Vercel dashboard** (Project Settings →
-  Domains → Edit `www.digitalfigments.com` → Redirect to →
-  `digitalfigments.com`). Both domains currently serve the full site with no
-  redirect between them — confirmed as the cause of Search Console's
-  "Alternate page with proper canonical tag" exclusions (see 2026-09-16
-  changelog). Can't be done from `vercel.json`/code; this is a one-time
-  manual step.
+- ~~`www.digitalfigments.com` needs a domain-level redirect to the apex
+  domain, set manually in the Vercel dashboard~~ — **done 2026-09-16**
+  (confirmed live via the Vercel API on 2026-09-20: `www.digitalfigments.com`
+  now has `redirect: "digitalfigments.com"`, `redirectStatusCode: 301`).
+  A Coverage report pulled 2026-09-20 still shows the pre-fix numbers
+  (~200 "Discovered — currently not indexed", 13 "Alternate page with
+  proper canonical tag", 8 "Blocked by robots.txt") — expected lag, since
+  Google only recrawls and reprocesses affected URLs over the following
+  weeks. No further code or config change identified: the sitemap
+  (`astro.config.mjs`) already excludes `/blog` and `/music`, `robots.txt`
+  (`src/pages/robots.txt.ts`) already disallows the same prefixes and
+  nothing in the site links into them, and every legacy WordPress post
+  permalink has its 301 in place. Re-check the next Coverage export in a
+  few weeks; if the counts haven't dropped by then, revisit.
 - **`obamas-audacity` page**: a genuine personal essay, not photo/media
   content, so it doesn't fit the nav or the site's framing. Kept at
   `/blog/obamas-audacity/`, undecided whether it becomes a regular post,
@@ -134,6 +140,21 @@ and won't restart on their own, but everything is still present on disk for
 a possible rollback.
 
 ## Changelog
+
+### 2026-09-20
+
+- **SEO: investigated a fresh Search Console Coverage export** (Critical
+  issues: 200 "Discovered — currently not indexed", 13 "Alternate page with
+  proper canonical tag", 8 "Blocked by robots.txt", 1 "Page with redirect").
+  Traced it to the same `www` duplicate-content bug diagnosed on 2026-09-16
+  — confirmed via the Vercel API that the dashboard redirect from that fix
+  is live (`www.digitalfigments.com` → `digitalfigments.com`, 301, set
+  2026-09-16), so the "Outstanding items" entry describing it as a pending
+  manual step was stale and has been corrected below. Audited the sitemap
+  filter, `robots.txt` generation, and internal links for anything feeding
+  crawl budget into `/blog` or `/music` — found nothing wrong. This report
+  predates enough recrawl time for the fix to show up in Search Console;
+  no code change was needed today.
 
 ### 2026-09-16
 
