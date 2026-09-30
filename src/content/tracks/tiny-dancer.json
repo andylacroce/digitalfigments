@@ -1,0 +1,11 @@
+{
+  "song": "Tiny Dancer",
+  "section": "covers",
+  "artist": "Elton John",
+  "date": "12/2008",
+  "media": {
+    "discriminant": "embed",
+    "value": "/media/Tiny-Dancer.mp4"
+  },
+  "order": 12
+}

@@ -1,0 +1,11 @@
+{
+  "song": "Jealous Guy",
+  "section": "covers",
+  "artist": "John Lennon",
+  "date": "2003",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/jealousguy.mp3"
+  },
+  "order": 6
+}

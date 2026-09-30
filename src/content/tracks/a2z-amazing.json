@@ -1,0 +1,11 @@
+{
+  "song": "Amazing",
+  "section": "a2z",
+  "artist": "Aerosmith",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/01-Aerosmith-Amazing.mp3"
+  },
+  "order": 0
+}

@@ -1,0 +1,11 @@
+{
+  "song": "Sand Castle Dogma",
+  "section": "demos",
+  "artist": "",
+  "date": "",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/sand-castle-dogma.mp3"
+  },
+  "order": 1
+}

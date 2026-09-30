@@ -1,0 +1,11 @@
+{
+  "song": "Patience (Segment)",
+  "section": "covers",
+  "artist": "Guns N Roses",
+  "date": "4/2023",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/patience-segment.mp3"
+  },
+  "order": 27
+}

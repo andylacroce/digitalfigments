@@ -1,0 +1,11 @@
+{
+  "song": "Desperado",
+  "section": "a2z",
+  "artist": "Eagles",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/05-Eagles-Desperado.mp3"
+  },
+  "order": 4
+}

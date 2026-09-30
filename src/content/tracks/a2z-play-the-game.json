@@ -1,0 +1,11 @@
+{
+  "song": "Play the Game",
+  "section": "a2z",
+  "artist": "Queen",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/17-Queen-Play-The-Game.mp3"
+  },
+  "order": 16
+}
