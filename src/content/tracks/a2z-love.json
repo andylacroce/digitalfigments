@@ -1,0 +1,11 @@
+{
+  "song": "Love",
+  "section": "a2z",
+  "artist": "John Lennon",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/12-Lennon-John-Love.mp3"
+  },
+  "order": 11
+}

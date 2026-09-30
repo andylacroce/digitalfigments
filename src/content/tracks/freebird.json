@@ -1,0 +1,11 @@
+{
+  "song": "Freebird",
+  "section": "covers",
+  "artist": "Lynyrd Skynyrd",
+  "date": "1999",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/freebird.mp3"
+  },
+  "order": 1
+}

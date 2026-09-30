@@ -1,0 +1,48 @@
+---
+import { mediaUrl } from "../lib/media";
+
+interface Track {
+  song: string;
+  artist: string;
+  date: string;
+  media: { discriminant: "audio" | "embed"; value: string };
+}
+interface Props {
+  tracks: Track[];
+}
+const { tracks } = Astro.props;
+---
+
+<ul class="track-list plain-list">
+  {tracks.map((data) => (
+    <li class="track divided-list-item">
+      <p class="track-title">
+        <strong>{data.song}</strong>
+        {data.artist && <> by {data.artist}</>}
+        {data.date && <span class="track-date">({data.date})</span>}
+      </p>
+      {data.media.discriminant === "audio" ? (
+        <audio controls src={mediaUrl(data.media.value)} />
+      ) : data.media.value.match(/\.(mp4|webm|mov)$/i) ? (
+        <video controls src={mediaUrl(data.media.value)} />
+      ) : (
+        <a href={data.media.value} target="_blank" rel="noreferrer">{data.media.value}</a>
+      )}
+    </li>
+  ))}
+</ul>
+
+<style>
+  .track { padding: 1.1rem 0; }
+  .track-title {
+    margin: 0 0 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+  .track-date {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>

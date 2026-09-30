@@ -1,0 +1,11 @@
+{
+  "song": "Your Song",
+  "section": "a2z",
+  "artist": "Elton John",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/10-John-Elton-Your-Song.mp3"
+  },
+  "order": 9
+}

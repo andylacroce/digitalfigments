@@ -1,0 +1,74 @@
+---
+import type { GetStaticPathsOptions } from "astro";
+import { getCollection, render } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import Pagination from "../components/Pagination.astro";
+import * as mdxComponents from "../components/mdx";
+import { formatDate } from "../lib/format";
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const posts = (await getCollection("posts")).sort(
+    (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+  );
+  return paginate(posts, { pageSize: 10 });
+}
+
+const { page } = Astro.props;
+const rendered = await Promise.all(page.data.map((p) => render(p)));
+const description =
+  page.currentPage === 1
+    ? undefined
+    : `Page ${page.currentPage} of the photo/video archive on Digital Figments.`;
+---
+
+<Layout
+  title={page.currentPage === 1 ? "Home" : `Home · Page ${page.currentPage}`}
+  description={description}
+>
+  <div class="pagination-top">
+    <Pagination page={page} label="Pagination (top)" />
+  </div>
+  <ul class="post-list plain-list">
+    {page.data.map((post, i) => {
+      const { Content } = rendered[i];
+      return (
+        <li class="post divided-list-item">
+          <a class="post-title" href={`/posts/${post.id}/`}>
+            <h2>{post.data.title}</h2>
+          </a>
+          <p class="post-meta kicker">{formatDate(post.data.date)}</p>
+          <div class="post-body">
+            <Content components={mdxComponents} />
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+  <div class="pagination-bottom">
+    <Pagination page={page} label="Pagination (bottom)" />
+  </div>
+</Layout>
+
+<style>
+  /* Equal gap (--gap) on both sides of each pagination nav. The wrappers offset
+     main's own top padding and main's bottom padding plus the footer's top
+     padding (mirrored in --main-pt/--main-pb, see global.css) and
+     the last post's trailing spacing so the result doesn't depend on them. */
+  .pagination-top, .pagination-bottom {
+    --gap: 2.25rem; --main-pt: 2rem; --main-pb: 2rem;
+  }
+  @media (max-width: 480px) {
+    .pagination-top, .pagination-bottom {
+      --gap: 1.375rem; --main-pt: 1.5rem; --main-pb: 1.5rem;
+    }
+  }
+  .pagination-top { margin: calc(var(--gap) - var(--main-pt)) 0 var(--gap); }
+  .pagination-bottom { margin: var(--gap) 0 calc(var(--gap) - var(--main-pb)); }
+  .post:last-child { margin-bottom: 0; padding-bottom: 0; }
+  .post:last-child .post-body > :global(:last-child) { margin-bottom: 0; }
+  .post { margin-bottom: 2rem; padding-bottom: 1.5rem; }
+  .post-title { text-decoration: none; color: inherit; }
+  .post-title h2 { margin: 0 0 0.35rem; font-size: 1.4rem; }
+  .post-title:hover h2 { color: var(--accent); }
+  .post-meta { margin: 0 0 1.25rem; color: var(--accent-2); }
+</style>

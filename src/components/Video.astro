@@ -1,0 +1,9 @@
+---
+// MDX <Video> tags (as written by Keystatic's Video block) store a plain
+// "/media/..." path; resolve it against the R2 bucket here.
+import { mediaUrl } from "../lib/media";
+
+const { src, ...rest } = Astro.props;
+---
+
+<video {...rest} src={mediaUrl(src)}></video>

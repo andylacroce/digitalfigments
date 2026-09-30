@@ -1,0 +1,11 @@
+{
+  "song": "Wild Horses",
+  "section": "covers",
+  "artist": "The Rolling Stones",
+  "date": "200_",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/wildhorses.mp3"
+  },
+  "order": 18
+}

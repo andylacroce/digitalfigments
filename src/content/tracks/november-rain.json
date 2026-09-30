@@ -1,0 +1,11 @@
+{
+  "song": "November Rain",
+  "section": "covers",
+  "artist": "Guns N Roses",
+  "date": "200_",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/novrrain.mp3"
+  },
+  "order": 14
+}

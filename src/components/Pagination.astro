@@ -1,0 +1,82 @@
+---
+import type { Page } from "astro";
+
+interface Props {
+  page: Page;
+  label: string;
+}
+const { page, label } = Astro.props;
+// Always show the first/last page and a window around the current one, so
+// this stays usable once there are many more pages than fit on one line —
+// e.g. "1 … 4 5 [6] 7 8 … 42" instead of every page number.
+const pageWindow = 2;
+const pageItems: (number | "gap")[] = [];
+for (let n = 1; n <= page.lastPage; n++) {
+  if (n === 1 || n === page.lastPage || Math.abs(n - page.currentPage) <= pageWindow) {
+    pageItems.push(n);
+  } else if (pageItems[pageItems.length - 1] !== "gap") {
+    pageItems.push("gap");
+  }
+}
+const pageHref = (n: number) => (n === 1 ? "/" : `/${n}`);
+---
+
+<nav class="pagination" aria-label={label}>
+  <div class="pagination-prev">
+    {page.url.prev && <a href={page.url.prev}>&larr; Newer</a>}
+  </div>
+  <ul class="pagination-pages plain-list">
+    {pageItems.map((n) => (
+      <li>
+        {n === "gap" ? (
+          <span class="pagination-gap" aria-hidden="true">&hellip;</span>
+        ) : n === page.currentPage ? (
+          <span aria-current="page" aria-label={`Page ${n}`}>{n}</span>
+        ) : (
+          <a href={pageHref(n)} aria-label={`Go to page ${n}`}>{n}</a>
+        )}
+      </li>
+    ))}
+  </ul>
+  <div class="pagination-next">
+    {page.url.next && <a href={page.url.next}>Older &rarr;</a>}
+  </div>
+</nav>
+
+<style>
+  /* Grid, not flex+space-between, so the page-number group is always
+     visually centered, even when Newer/Older differ in width or one of
+     them is absent (first/last page). Prev, pages, and next stay on one
+     row at every width — the pages list wraps its own items internally
+     if it doesn't fit, rather than the whole group dropping to a new row. */
+  .pagination {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+    gap: 0.5rem 0.75rem;
+  }
+  .pagination-prev { justify-self: start; }
+  .pagination-next { justify-self: end; }
+  .pagination a { text-decoration: none; font-size: 0.9rem; font-weight: 600; color: var(--accent); }
+  .pagination-pages {
+    justify-self: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+  .pagination-pages a,
+  .pagination-pages span {
+    min-width: 1.75rem;
+    padding: 0.15rem 0.4rem;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  .pagination-pages span[aria-current="page"] {
+    background: var(--accent);
+    color: var(--bg, #fff);
+    font-weight: 700;
+  }
+  .pagination-gap { color: var(--muted); padding: 0.15rem 0.15rem; }
+</style>

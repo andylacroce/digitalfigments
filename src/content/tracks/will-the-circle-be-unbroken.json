@@ -1,0 +1,11 @@
+{
+  "song": "Will the Circle Be Unbroken",
+  "section": "covers",
+  "artist": "Ada R. Habershon with music by Charles H. Gabriel",
+  "date": "4/2024",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/willthecirclebeunbroken.mp3"
+  },
+  "order": 28
+}

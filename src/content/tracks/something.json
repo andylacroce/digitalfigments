@@ -1,0 +1,11 @@
+{
+  "song": "Something",
+  "section": "covers",
+  "artist": "The Beatles",
+  "date": "2001",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/something.mp3"
+  },
+  "order": 4
+}

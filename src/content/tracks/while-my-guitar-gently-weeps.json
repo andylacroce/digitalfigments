@@ -1,0 +1,11 @@
+{
+  "song": "While My Guitar Gently Weeps",
+  "section": "covers",
+  "artist": "The Beatles",
+  "date": "2001",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/whilemyguitargentlyweeps.mp3"
+  },
+  "order": 3
+}

@@ -1,0 +1,86 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BackLink from "../components/BackLink.astro";
+---
+
+<Layout
+  title="Music"
+  description="Song covers, an a2z cover-song project, and original demos."
+  noindex
+>
+  <h1>Music</h1>
+  <nav class="music-menu">
+    <a class="music-tile" href="/covers/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18V5l12-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="16" r="3" />
+      </svg>
+      <span>Covers</span>
+    </a>
+    <a class="music-tile" href="/a2z/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="6" stroke-dasharray="2.2 2.2" />
+        <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+      </svg>
+      <span>a2z Covers Project</span>
+    </a>
+    <a class="music-tile" href="/demos/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="6" width="20" height="14" rx="2" />
+        <circle cx="8" cy="13" r="2.6" />
+        <circle cx="16" cy="13" r="2.6" />
+        <path d="M9.5 9h5" />
+      </svg>
+      <span>Demos</span>
+    </a>
+  </nav>
+  <BackLink fallback="/" label="Home" />
+</Layout>
+
+<style>
+  .music-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
+  .music-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    border: 2px solid color-mix(in srgb, var(--muted) 35%, transparent);
+    border-radius: 10px;
+    color: var(--fg);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-align: center;
+    animation: fadeUp 0.4s ease both;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .music-tile:nth-child(1) { animation-delay: 0s; }
+  .music-tile:nth-child(2) { animation-delay: 0.08s; }
+  .music-tile:nth-child(3) { animation-delay: 0.16s; }
+  .music-tile svg {
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--accent-2);
+    transition: transform 0.25s ease, color 0.18s ease;
+  }
+  .music-tile:hover,
+  .music-tile:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+  .music-tile:hover svg,
+  .music-tile:focus-visible svg {
+    color: var(--accent);
+    transform: scale(1.12) rotate(-4deg);
+  }
+</style>

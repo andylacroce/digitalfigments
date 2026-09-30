@@ -1,0 +1,9 @@
+---
+// MDX <Audio> tags (as written by Keystatic's Audio block) store a plain
+// "/media/..." path; resolve it against the R2 bucket here.
+import { mediaUrl } from "../lib/media";
+
+const { src, ...rest } = Astro.props;
+---
+
+<audio {...rest} src={mediaUrl(src)}></audio>

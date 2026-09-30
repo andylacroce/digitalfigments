@@ -1,0 +1,11 @@
+{
+  "song": "Game of Pricks",
+  "section": "covers",
+  "artist": "Guided By Voices",
+  "date": "12/2005",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/gameofpricks.wav"
+  },
+  "order": 8
+}

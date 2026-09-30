@@ -1,0 +1,11 @@
+{
+  "song": "Social Bug Shadow",
+  "section": "demos",
+  "artist": "",
+  "date": "",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/social-bug-shadow.mp3"
+  },
+  "order": 4
+}
