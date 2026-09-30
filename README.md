@@ -26,6 +26,36 @@ Keystatic (/keystatic)  ──commit──▶  GitHub (main)  ──push──�
 - **Every push to `main`** deploys to production, including commits made from
   Keystatic.
 
+## What it depends on
+
+The repo builds and runs the site's code on its own, but a working deployment
+relies on these outside services:
+
+| Service | Used for | If it's down or missing |
+| :--- | :--- | :--- |
+| **GitHub** | Source of truth, Actions (CI, media sync), and the GitHub App Keystatic logs in through | No editing or deploys; the live site keeps serving |
+| **Vercel** | Builds and hosts the site; every push to `main` deploys | No new deploys; the last one keeps serving |
+| **Cloudflare R2** | Serves all audio, video, and zip files at `media.digitalfigments.com` | Pages load, but every audio/video file 404s |
+| **Cloudflare DNS** | `digitalfigments.com` and `media.` records | Site unreachable |
+| **YouTube** | Video embeds on some covers/demos pages | Those embeds don't play |
+
+**R2 is the one to know about.** Media files are committed in `assets/media/`
+as the source of truth, but the site never serves them from git or Vercel.
+[`mediaUrl()`](src/lib/media.ts) rewrites each `/media/...` path to the R2
+domain using the `PUBLIC_MEDIA_BASE_URL` build variable. Without that variable
+a production build produces relative `/media/...` links that 404. Local
+development needs no R2 access; see [Media assets](#media-assets).
+
+Configuration a deployment needs:
+
+- **Vercel environment variables:** `PUBLIC_MEDIA_BASE_URL` and the Keystatic
+  GitHub App credentials (`KEYSTATIC_*`).
+- **GitHub Actions secrets:** `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
+  `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (used by the media
+  sync workflow).
+- **One-time local login:** `npx wrangler login` so the pre-commit hook can
+  upload media to R2.
+
 ## Quick start
 
 ```sh
