@@ -1,4 +1,4 @@
-MIT License (source code only)
+MIT License
 
 Copyright (c) 2026 Andy Lacroce
 
@@ -19,8 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-Content is excluded: all posts, photos, video, audio, and other files under
-src/content/, assets/, and public/ are copyright Andy Lacroce, all rights
-reserved, except where they are covers or third-party works, which remain the
-property of their respective owners.
