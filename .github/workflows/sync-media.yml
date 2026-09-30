@@ -1,0 +1,64 @@
+name: Sync media to R2
+
+# Closes the gap the local pre-commit hook can't cover: Keystatic's CMS
+# uploads commit straight to GitHub via its API, bypassing any local git
+# hooks entirely. This mirrors assets/media to R2 whenever a push to main
+# actually touches it (see README's "Media assets" section).
+#
+# vercel.json's ignoreCommand skips Vercel's own auto-deploy for commits
+# touching these paths, so the deploy steps below are what actually deploy
+# them — after R2 has the file, not racing against it. Deploying via the
+# Vercel CLI (not a deploy hook) is deliberate: a deploy hook re-triggers
+# a normal git-integration build, which re-evaluates the SAME ignoreCommand
+# and gets skipped again (a documented Vercel limitation — deploy hooks and
+# ignoreCommand share one gate with no way to tell them apart). A CLI-driven
+# deploy doesn't go through that pipeline at all, so it isn't gated by it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/media/**"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-media:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Sync changed/new media to R2
+        run: node scripts/sync-media.mjs --all
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Commit updated manifest
+        run: |
+          if ! git diff --quiet -- assets/.media-manifest.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add assets/.media-manifest.json
+            git commit -m "chore: update media manifest [skip ci]"
+            git push
+          fi
+
+      # Runs even if the sync step above failed, so a transient R2/wrangler
+      # error doesn't leave the commit permanently undeployed (worst case:
+      # the newest file 404s until a later sync run catches it up, same as
+      # before this workflow existed).
+      - name: Deploy to Vercel
+        if: always()
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx --yes vercel@62.0.0 pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx --yes vercel@62.0.0 build --prod --token="$VERCEL_TOKEN"
+          npx --yes vercel@62.0.0 deploy --prebuilt --prod --token="$VERCEL_TOKEN"

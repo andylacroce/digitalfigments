@@ -1,0 +1,11 @@
+{
+  "song": "Happy Xmas (War is Over)",
+  "section": "covers",
+  "artist": "John Lennon",
+  "date": "2008",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/happyxmas.mp3"
+  },
+  "order": 10
+}

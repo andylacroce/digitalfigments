@@ -1,0 +1,45 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# test/CI output
+coverage/
+playwright-report/
+test-results/
+
+# Claude Code local runtime state
+.claude/
+
+# dependencies
+node_modules/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+*.pem
+*.key
+
+# Cloudflare tooling state
+.wrangler/
+
+# macOS-specific files
+.DS_Store
+
+# Windows-specific files
+Thumbs.db
+
+# jetbrains setting folder
+.idea/
+.vercel
+

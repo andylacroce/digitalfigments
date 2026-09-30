@@ -1,0 +1,259 @@
+---
+import '../styles/global.css';
+
+const SITE_NAME = "Digital Figments";
+const DEFAULT_DESCRIPTION = "Photos, doodles, videos, and song covers — a personal media blog.";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Absolute URL — build with new URL(path, Astro.site) in the calling page. */
+  image?: string;
+  type?: "website" | "article";
+  noindex?: boolean;
+  publishedTime?: Date;
+}
+const {
+  title,
+  description = DEFAULT_DESCRIPTION,
+  image,
+  type = "website",
+  noindex = false,
+  publishedTime,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const fullTitle = `${title} · ${SITE_NAME}`;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    {image && <meta property="og:image" content={image} />}
+    {type === "article" && publishedTime && (
+      <meta property="article:published_time" content={publishedTime.toISOString()} />
+    )}
+
+    <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {image && <meta name="twitter:image" content={image} />}
+
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        if (stored) document.documentElement.setAttribute("data-theme", stored);
+      })();
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <a class="brand" href="/">Digital Figments</a>
+        <div class="header-actions">
+          <button id="back-to-top" type="button" class="back-to-top" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            Top
+          </button>
+          <button id="theme-toggle" type="button" aria-label="Toggle light and dark mode">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p><a href="/privacy-policy/">Privacy Policy</a></p>
+    </footer>
+    <div id="lightbox" class="lightbox" hidden>
+      <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
+      <img id="lightbox-img" alt="" />
+    </div>
+    <script is:inline>
+      (function () {
+        const root = document.documentElement;
+        document.getElementById("theme-toggle").addEventListener("click", function () {
+          const current =
+      root.getAttribute("data-theme") ||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          const next = current === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          localStorage.setItem("theme", next);
+        });
+      })();
+
+      // Show a "Back to top" button once the page has scrolled a bit.
+      // Uses its own short, eased animation rather than native smooth-scroll,
+      // which on a long page can feel sluggish and varies by browser.
+      (function () {
+        const btn = document.getElementById("back-to-top");
+        function onScroll() {
+          btn.hidden = window.scrollY < 400;
+        }
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+
+        // This is a short, user-initiated scroll with a fixed endpoint (not
+        // ambient/decorative motion), so it always animates — unlike the
+        // fade-in/hover effects elsewhere, which do respect reduced-motion.
+        btn.addEventListener("click", function () {
+          // CSS sets `scroll-behavior: smooth` on <html> (for anchor jumps),
+          // but that also intercepts plain scrollTo() calls — including each
+          // frame of the animation below — turning them into overlapping
+          // native smooth-scrolls instead of the instant per-frame jumps this
+          // needs. Overriding via inline style (higher specificity than the
+          // stylesheet rule) for the duration of the animation fixes it.
+          const htmlEl = document.documentElement;
+          const prevScrollBehavior = htmlEl.style.scrollBehavior;
+          htmlEl.style.scrollBehavior = "auto";
+
+          function restore() {
+            htmlEl.style.scrollBehavior = prevScrollBehavior;
+          }
+
+          const startY = window.scrollY;
+          let startTime = null;
+          const duration = 350;
+          function step(now) {
+            if (startTime === null) startTime = now;
+            const t = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 3);
+            window.scrollTo(0, startY * (1 - eased));
+            if (t < 1) {
+              requestAnimationFrame(step);
+            } else {
+              restore();
+            }
+          }
+          requestAnimationFrame(step);
+        });
+      })();
+
+      // Group 2+ consecutive standalone images per post into their own
+      // masonry gallery: a CSS grid (see .gallery in global.css) whose
+      // columns auto-fill the available width and whose row-height per item
+      // is set here from the image's real aspect ratio, so photos flow into
+      // whichever column is currently shortest and keep their natural
+      // proportions — no crop, no letterboxing, no forced grid cell shape.
+      (function () {
+        function isImageParagraph(el) {
+          return (
+            el.tagName === "P" &&
+            el.children.length === 1 &&
+            el.children[0].tagName === "IMG" &&
+            el.textContent.trim() === ""
+          );
+        }
+
+        const galleries = [];
+
+        document.querySelectorAll("article, .post-body").forEach(function (container) {
+          const children = Array.prototype.slice.call(container.children);
+          let i = 0;
+          while (i < children.length) {
+            if (!isImageParagraph(children[i])) {
+              i++;
+              continue;
+            }
+            let j = i + 1;
+            while (j < children.length && isImageParagraph(children[j])) j++;
+            if (j - i >= 2) {
+              const wrapper = document.createElement("div");
+              wrapper.className = "gallery";
+              container.insertBefore(wrapper, children[i]);
+              for (let k = i; k < j; k++) {
+                children[k].classList.add("gallery-item");
+                wrapper.appendChild(children[k]);
+              }
+              galleries.push(wrapper);
+            }
+            i = j;
+          }
+        });
+
+        if (!galleries.length) return;
+
+        const ROW = 4; // px — grid-auto-rows unit; fine enough that rounding is invisible
+
+        function place(item) {
+          const img = item.children[0];
+          const ratio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 0.75;
+          const gap = parseFloat(getComputedStyle(item.parentElement).columnGap) || 0;
+          const span = Math.ceil((item.clientWidth * ratio + gap) / ROW);
+          item.style.gridRowEnd = "span " + span;
+          item.classList.add("is-visible");
+        }
+
+        galleries.forEach(function (gallery) {
+          Array.prototype.forEach.call(gallery.children, function (item) {
+            const img = item.children[0];
+            if (img.complete) {
+              place(item);
+            } else {
+              img.addEventListener("load", function () { place(item); });
+              img.addEventListener("error", function () { place(item); });
+            }
+          });
+        });
+
+        let resizeTimer;
+        window.addEventListener("resize", function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            galleries.forEach(function (gallery) {
+              Array.prototype.forEach.call(gallery.children, place);
+            });
+          }, 150);
+        });
+      })();
+
+      // Click any post image to view it enlarged.
+      (function () {
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightbox-img");
+
+        function open(src, alt) {
+          lightboxImg.src = src;
+          lightboxImg.alt = alt || "";
+          lightbox.hidden = false;
+          requestAnimationFrame(function () {
+            lightbox.classList.add("is-open");
+          });
+        }
+        function close() {
+          lightbox.classList.remove("is-open");
+          setTimeout(function () {
+            lightbox.hidden = true;
+            lightboxImg.src = "";
+          }, 150);
+        }
+
+        document.querySelectorAll("main img").forEach(function (img) {
+          img.addEventListener("click", function () {
+            open(img.currentSrc || img.src, img.alt);
+          });
+        });
+        lightbox.addEventListener("click", close);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") close();
+        });
+      })();
+    </script>
+  </body>
+</html>

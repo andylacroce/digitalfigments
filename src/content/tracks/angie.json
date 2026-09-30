@@ -1,0 +1,11 @@
+{
+  "song": "Angie",
+  "section": "covers",
+  "artist": "the Rolling Stones",
+  "date": "2000",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/angie.mp3"
+  },
+  "order": 2
+}

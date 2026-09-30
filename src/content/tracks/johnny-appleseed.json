@@ -1,0 +1,11 @@
+{
+  "song": "Johnny Appleseed",
+  "section": "covers",
+  "artist": "Guided By Voices",
+  "date": "201_",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/JohnnyAppleseed.mp3"
+  },
+  "order": 20
+}

@@ -1,0 +1,11 @@
+{
+  "song": "Masquerading Greyhound V5",
+  "section": "demos",
+  "artist": "",
+  "date": "",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/masquerading-greyhound-v5.mp3"
+  },
+  "order": 5
+}

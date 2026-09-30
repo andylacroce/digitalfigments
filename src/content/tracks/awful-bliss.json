@@ -1,0 +1,11 @@
+{
+  "song": "Awful Bliss",
+  "section": "covers",
+  "artist": "Guided By Voices",
+  "date": "2010",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/awfulbliss.mp3"
+  },
+  "order": 19
+}

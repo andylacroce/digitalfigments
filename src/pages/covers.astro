@@ -1,0 +1,20 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import BackLink from "../components/BackLink.astro";
+import TrackList from "../components/TrackList.astro";
+
+const tracks = (await getCollection("tracks"))
+  .filter((t) => t.data.section === "covers")
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((t) => t.data);
+---
+
+<Layout
+  title="Covers"
+  description="A song-cover archive — acoustic and home-recorded covers."
+>
+  <h1>Covers</h1>
+  <TrackList tracks={tracks} />
+  <BackLink fallback="/" label="Home" />
+</Layout>

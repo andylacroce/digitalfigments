@@ -1,0 +1,22 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import Layout from "../layouts/Layout.astro";
+import BackLink from "../components/BackLink.astro";
+import TrackList from "../components/TrackList.astro";
+import { mediaUrl } from "../lib/media";
+import a2zPhoto from "../content/posts/images/2016/07/IMG_0259.jpg";
+
+const tracks = (await getCollection("tracks"))
+  .filter((t) => t.data.section === "a2z")
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((t) => t.data);
+---
+
+<Layout title="a2z Covers Project (2008)" description="The a2z Covers Project (2008) — a 26-track cover-song project, one song for every letter of the alphabet.">
+  <h1>a2z Covers Project (2008)</h1>
+  <p><a href={mediaUrl("/media/a2z-covers.zip")}><strong>Download all (.zip)</strong></a></p>
+  <Image src={a2zPhoto} alt="" />
+  <TrackList tracks={tracks} />
+  <BackLink fallback="/music/" label="Music" />
+</Layout>

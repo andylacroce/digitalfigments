@@ -1,0 +1,11 @@
+{
+  "song": "Cats in the Cradle",
+  "section": "covers",
+  "artist": "Harry Chapin",
+  "date": "1999",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/catsinthecradle.mp3"
+  },
+  "order": 0
+}

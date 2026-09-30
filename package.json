@@ -1,0 +1,66 @@
+{
+  "name": "digitalfigments",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postprocess-images.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "lint": "eslint --max-warnings=0 .",
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "typecheck": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "ci": "node scripts/run-ci.mjs",
+    "sync-media": "node scripts/sync-media.mjs",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "^0.4.2",
+    "@astrojs/mdx": "^8.0.2",
+    "@astrojs/react": "^7.0.0",
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/vercel": "^11.0.11",
+    "@keystatic/astro": "^6.0.0",
+    "@keystatic/core": "^0.6.9",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "astro": "^7.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.5",
+    "@vitest/coverage-v8": "^5.0.0",
+    "eslint": "^10.10.0",
+    "eslint-plugin-astro": "^3.1.0",
+    "globals": "^17.12.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.0",
+    "markdownlint-cli2": "^0.23.3",
+    "secretlint": "^13.0.5",
+    "serve": "^14.2.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.69.0",
+    "vitest": "^5.0.0"
+  },
+  "overrides": {
+    "path-to-regexp": "6.3.0"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx,astro,json,md,mdx,yml,yaml,css}": "secretlint",
+    "*.{js,mjs,cjs,ts,tsx,astro}": "eslint --max-warnings=0"
+  }
+}

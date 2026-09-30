@@ -1,0 +1,11 @@
+{
+  "song": "Spanish Caravan",
+  "section": "covers",
+  "artist": "The Doors",
+  "date": "3/2022",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/Spanish-Caravan-1.mp3"
+  },
+  "order": 24
+}

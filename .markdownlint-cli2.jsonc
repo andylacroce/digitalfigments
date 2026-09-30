@@ -1,0 +1,12 @@
+{
+  "config": {
+    "default": true,
+    // README.md is long-form prose by design, not hard-wrapped lines.
+    "MD013": false,
+    // CLAUDE.md/AGENTS.md intentionally don't open with a top-level heading.
+    "MD041": false,
+    // CHANGELOG.md repeats Added/Changed/Fixed under each date.
+    "MD024": { "siblings_only": true }
+  },
+  "ignores": ["node_modules", "dist", ".astro", ".vercel", "coverage", "playwright-report", "test-results"]
+}
