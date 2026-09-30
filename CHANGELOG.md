@@ -1,7 +1,7 @@
 # Changelog
 
 Notable changes to [digitalfigments.com](https://digitalfigments.com), a
-personal photo and video site built with Astro and Keystatic. Dates are
+personal photo, video, and music site built with Astro and Keystatic. Dates are
 `YYYY-MM-DD`, newest first. See the [README](README.md) for how the site is
 put together.
 
@@ -93,7 +93,8 @@ This file is the record of what came before.
 - Posts, the covers archive, and static pages, migrated from WordPress.
 - Covers, demos, and a2z recordings share a single tracks collection and page
   layout.
-- Lightbox, back-to-top button, light and dark themes, and basic SEO.
+- Lightbox, back-to-top button, an animated `/music` menu, light and dark
+  themes, and basic SEO.
 - Security headers and a content security policy.
 
 ### Fixed

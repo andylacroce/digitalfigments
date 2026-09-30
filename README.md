@@ -1,6 +1,6 @@
 # digitalfigments.com
 
-A personal photo and video blog, live at
+A personal photo/video blog and music archive, live at
 **<https://digitalfigments.com>**. Built with [Astro](https://astro.build)
 (static site) and [Keystatic](https://keystatic.com) (git-backed CMS),
 hosted on Vercel. All content is plain files in this repo — no database, no
@@ -63,7 +63,7 @@ The `/a2z/` intro (download-all zip, header image) is hardcoded in
 
 ### Pages — static pages
 
-`/privacy-policy/` and similar. Files: `src/content/pages/*.mdx`.
+`/privacy-policy/`, `/music/`, and similar. Files: `src/content/pages/*.mdx`.
 
 ## Media assets
 
@@ -102,8 +102,10 @@ How files get to R2 and how deploys are ordered:
 ## Site sections
 
 - **Public and indexed:** home (`/`, paginated), `/covers/`, `/demos/`, `/a2z/`.
-- `src/site.config.ts` lists any routes kept unlinked and `noindex`; it drives
-  `robots.txt`, each page's `noindex` tag, and the sitemap filter.
+- **Live but unlinked and `noindex`:** `/music/`.
+- `src/site.config.ts` is the single source of truth for these "unexposed"
+  routes: it drives `robots.txt`, each page's `noindex` tag, and the sitemap
+  filter.
 - `/old-site/` is a legacy 2000s static band site preserved as-is in
   `public/old-site/`.
 - Old flat post links (`/<slug>/`) redirect to `/posts/<slug>/`; the
