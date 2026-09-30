@@ -97,37 +97,72 @@ The `/a2z/` intro (download-all zip, header image) is hardcoded in
 
 ## Media assets
 
-Audio, video, and the a2z zip live flat in `assets/media/`. They're
-git-tracked but deliberately **not** under `public/`: Vercel keeps a full copy
-of `public/` in every retained deployment, and these files (hundreds of MB)
-blew through the free storage quota that way. Instead they're mirrored to the
-Cloudflare R2 bucket `digitalfigments-media`, served at
-`media.digitalfigments.com`, and resolved at render time by `mediaUrl()`
-([src/lib/media.ts](src/lib/media.ts)) using the `PUBLIC_MEDIA_BASE_URL` env
-var. Keystatic's audio uploads land in the same directory.
+Audio, video, and the a2z zip are the heavy files. They're committed to git in
+[`assets/media/`](assets/media/), but visitors never get them from git or
+from Vercel: they're served from a **Cloudflare R2** bucket at
+`media.digitalfigments.com`. This section explains how to add a file and what
+happens behind the scenes.
 
-How files get to R2 and how deploys are ordered:
+### Adding a file
 
-- **Local commits** touching `assets/media/` run
-  [scripts/sync-media.mjs](scripts/sync-media.mjs) from `.husky/pre-commit`,
-  which uploads only changed files (content-hash diffed against the tracked
-  `assets/.media-manifest.json`) and folds the manifest update into the same
-  commit. Needs `npx wrangler login` once.
-- **Keystatic commits** bypass local hooks, so
-  `.github/workflows/sync-media.yml` does the same on any push to `main`
-  touching `assets/media/`, then commits the updated manifest. Needs
-  `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repo secrets.
-- **Deploy ordering.** `vercel.json`'s `ignoreCommand` tells Vercel to skip
-  its own auto-deploy for commits touching `assets/media`, so a page can't go
-  live before its file is on R2. The workflow's last step deploys via the
-  Vercel CLI instead (`vercel pull`/`build`/`deploy --prebuilt --prod`; needs
-  `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secrets). A deploy hook
-  wouldn't work — it goes through the same `ignoreCommand` gate and gets
-  skipped too.
-- **Local dev never touches R2.** A dev-only middleware in `astro.config.mjs`
-  serves `assets/media/` from disk, and `mediaUrl()` leaves paths relative
-  when `import.meta.env.DEV` is true.
-- `npm run sync-media -- --all` forces a full rescan if the manifest drifts.
+- **From Keystatic (works from a phone).** Tracks → Add or edit → upload an
+  **Audio file**. Saving commits it to `main`, and everything below happens
+  automatically. Wait for the deploy, then check the page.
+- **By hand.** Drop the file in `assets/media/` (one flat folder, no
+  subfolders), reference it as `/media/<filename>` in a track or an
+  audio/video block, and commit. The pre-commit hook uploads it to R2 for you.
+  You need to run `npx wrangler login` once on your machine first.
+- **Locally, to preview.** `npm run dev` plays files straight from
+  `assets/media/` with no upload and no R2 access needed.
+
+### Where a file lives
+
+| Place | Role |
+| :--- | :--- |
+| `assets/media/` in git | The master copy and backup. Never served to visitors. |
+| Cloudflare R2 bucket `digitalfigments-media` | What the live site actually plays, via `media.digitalfigments.com`. |
+| Vercel | Never holds media. Only pages and optimized photos are deployed. |
+
+Pages store paths like `/media/song.mp3`. At build time
+[`mediaUrl()`](src/lib/media.ts) rewrites them to the R2 domain using the
+`PUBLIC_MEDIA_BASE_URL` variable.
+
+### What happens when you add one
+
+1. **The file reaches R2.** [`scripts/sync-media.mjs`](scripts/sync-media.mjs)
+   uploads only new or changed files, comparing content hashes against
+   `assets/.media-manifest.json`. A local commit runs it from
+   `.husky/pre-commit` and folds the manifest update into your commit.
+   Keystatic commits skip local hooks, so
+   [`sync-media.yml`](.github/workflows/sync-media.yml) does the same job on
+   any push to `main` that touches `assets/media/`, then commits the manifest.
+2. **The site deploys after the upload.** Vercel's own auto-deploy is turned
+   off for commits that touch `assets/media/` (the `ignoreCommand` in
+   [`vercel.json`](vercel.json)), so a page can never go live before its file
+   exists on R2. The workflow's last step deploys through the Vercel CLI
+   instead. A deploy hook wouldn't work: it passes through the same
+   `ignoreCommand` and gets skipped too.
+
+The secrets the workflow needs are listed under
+[What it depends on](#what-it-depends-on).
+
+### Why it's built this way
+
+Vercel keeps a full copy of `public/` in every retained deployment. These
+files total hundreds of MB, and keeping them there used up the free storage
+quota. R2 has a much larger free allowance and adds CDN caching, while git keeps everything
+backed up and editable through the same Keystatic flow as everything else.
+
+### If something's wrong
+
+- **Audio or video 404s on the live site.** The upload may have failed or not
+  finished. Check the latest "Sync media to R2" run in GitHub Actions, then run
+  `npm run sync-media -- --all` locally to force a full re-check. Also confirm
+  `PUBLIC_MEDIA_BASE_URL` is set in Vercel.
+- **The manifest seems out of step with the bucket.** The same
+  `npm run sync-media -- --all` command rescans everything and fixes it.
+- **A file plays locally but not in production.** It isn't on R2 yet, so check
+  the two points above.
 
 ## Site sections
 
