@@ -49,7 +49,7 @@
     "globals": "^17.12.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.0",
-    "markdownlint-cli2": "^0.23.2",
+    "markdownlint-cli2": "^0.23.3",
     "secretlint": "^13.0.5",
     "serve": "^14.2.6",
     "turndown": "^7.2.4",
