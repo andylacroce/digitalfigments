@@ -52,7 +52,7 @@
     "markdownlint-cli2": "^0.23.3",
     "secretlint": "^13.0.5",
     "serve": "^14.2.6",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.69.0",
     "vitest": "^5.0.0"
   },
