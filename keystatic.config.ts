@@ -167,8 +167,8 @@ export default config({
           }
         ),
         order: fields.integer({
-          label: 'Sort order',
-          description: 'Lower numbers appear first within this section',
+          label: 'Sort order (Demos and a2z only)',
+          description: 'Ignored for Covers, which sort newest to oldest by date. Lower numbers appear first.',
           defaultValue: 0,
         }),
       },

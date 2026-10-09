@@ -88,8 +88,9 @@ post and handled like any other [media asset](#media-assets). Files:
 One collection, one shared `TrackList` layout. Tracks → Add: song title,
 **Section** (Covers, Demos, or a2z — this routes it to the right page),
 original artist (blank for Demos), a free-text date, an **Audio file** upload
-or **YouTube/video embed** URL, and a **sort order** (lower appears first,
-independently per section). Files: `src/content/tracks/*.json`.
+or **YouTube/video embed** URL, and a **sort order** (lower appears first;
+Demos and a2z only — Covers sort newest to oldest by date). Files:
+`src/content/tracks/*.json`.
 
 The `/a2z/` intro (download-all zip, header image) is hardcoded in
 `src/pages/a2z.astro`; it isn't a track.
