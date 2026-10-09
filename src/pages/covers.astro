@@ -4,9 +4,24 @@ import Layout from "../layouts/Layout.astro";
 import BackLink from "../components/BackLink.astro";
 import TrackList from "../components/TrackList.astro";
 
+// Dates are free-form ("2008", "10/2026", "200_", "6/2008 w/ Kerry"); "_" = unknown digit.
+const dateKey = (date: string) => {
+  const year = date.match(/\d{3}[\d_]/)?.[0].replace("_", "0") ?? "0";
+  const month = date.match(/^(\d{1,2})\//)?.[1] ?? "0";
+  return Number(year) * 100 + Number(month);
+};
+// Tie-break: fully known dates before vague ones ("2026" after "10/2026", "200_" after "2000").
+const vagueness = (date: string) =>
+  (date.includes("_") ? 2 : 0) + (/^\d{1,2}\//.test(date) ? 0 : 1);
+
 const tracks = (await getCollection("tracks"))
   .filter((t) => t.data.section === "covers")
-  .sort((a, b) => a.data.order - b.data.order)
+  .sort(
+    (a, b) =>
+      dateKey(b.data.date) - dateKey(a.data.date) ||
+      vagueness(a.data.date) - vagueness(b.data.date) ||
+      a.data.order - b.data.order,
+  )
   .map((t) => t.data);
 ---
 
