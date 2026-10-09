@@ -1,0 +1,11 @@
+{
+  "song": "Autumn",
+  "section": "covers",
+  "artist": "Jessie Welles",
+  "date": "10/2026",
+  "media": {
+    "discriminant": "audio",
+    "value": "/media/autumn/media/value.mp3"
+  },
+  "order": 20
+}
