@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same PR (a Dependabot rebase, a follow-up commit) makes
+# the in-flight run pointless. Runs on main are never cancelled.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ci:
     name: Lint, test, and build
@@ -35,8 +41,26 @@ jobs:
           key: astro-assets-${{ hashFiles('src/content/posts/images/**') }}
           restore-keys: astro-assets-
 
+      # The browser download is the slow part; the apt packages it needs live
+      # outside the cache, so a hit still runs install-deps.
+      - name: Get Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       # Runs lint -> markdown lint -> typecheck -> unit tests (90% coverage
       # gate) -> build -> E2E tests in order, stopping at the first failure,
