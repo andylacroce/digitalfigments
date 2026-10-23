@@ -58,7 +58,9 @@
   },
   "overrides": {
     "compression": "1.8.2",
-    "path-to-regexp": "6.3.0"
+    "katex": "0.18.2",
+    "path-to-regexp": "6.3.0",
+    "zod": "4.6.7"
   },
   "lint-staged": {
     "*.{js,mjs,cjs,ts,tsx,astro,json,md,mdx,yml,yaml,css}": "secretlint",
