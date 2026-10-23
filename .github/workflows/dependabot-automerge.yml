@@ -1,11 +1,10 @@
 name: Dependabot auto-merge
 
-# Enables GitHub auto-merge on Dependabot PRs that are low risk: any
-# GitHub Actions bump, and npm patch/minor bumps. A grouped npm PR reports
-# its highest update type, so one major bump in a group keeps the whole PR
-# for manual review. Auto-merge only completes once the required checks on
-# main pass (branch protection must require "Lint, test, and build"), and
-# the repo's "Allow auto-merge" setting must be on.
+# Enables GitHub auto-merge on every Dependabot PR, majors included. Auto-merge
+# only completes once the required checks on main pass, so CI is the gate:
+# branch protection must require "Lint, test, and build", and the repo's
+# "Allow auto-merge" setting must be on. Without a required check, --auto
+# merges immediately.
 on:
   pull_request_target:
     branches: [main]
@@ -20,17 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
-      - name: Fetch Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Enable auto-merge
-        if: >-
-          steps.metadata.outputs.package-ecosystem == 'github_actions' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
