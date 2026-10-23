@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 4321;
+const KEYSTATIC_PORT = 4322;
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -29,16 +30,26 @@ export default defineConfig({
   // small vanilla-JS behaviors, not an app — one engine is enough signal
   // without adding a cross-browser matrix's runtime/flake surface.
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    // The whole site prerenders to static HTML (see astro.config.mjs), so
-    // `dist/client` is served directly rather than through `astro preview`
-    // — the Vercel adapter's build output isn't meant to be previewed via
-    // Astro's own preview server (it exits immediately, nothing to serve
-    // from it locally). `npm run ci` runs `build` beforehand, so this
-    // doesn't pay for a second one.
-    command: `npx serve dist/client -l ${PORT}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      // The whole site prerenders to static HTML (see astro.config.mjs), so
+      // `dist/client` is served directly rather than through `astro preview`
+      // — the Vercel adapter's build output isn't meant to be previewed via
+      // Astro's own preview server (it exits immediately, nothing to serve
+      // from it locally). `npm run ci` runs `build` beforehand, so this
+      // doesn't pay for a second one.
+      command: `npx serve dist/client -l ${PORT}`,
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    {
+      // The Keystatic admin is server-rendered, so it only exists under the
+      // dev server (local storage mode, no login). Used by e2e/keystatic.spec.ts.
+      command: `npx astro dev --port ${KEYSTATIC_PORT}`,
+      url: `http://localhost:${KEYSTATIC_PORT}/keystatic`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

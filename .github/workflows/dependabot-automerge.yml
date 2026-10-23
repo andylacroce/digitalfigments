@@ -1,0 +1,26 @@
+name: Dependabot auto-merge
+
+# Enables GitHub auto-merge on every Dependabot PR, majors included. Auto-merge
+# only completes once the required checks on main pass, so CI is the gate:
+# branch protection must require "Lint, test, and build", and the repo's
+# "Allow auto-merge" setting must be on. Without a required check, --auto
+# merges immediately.
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    name: Enable auto-merge
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Enable auto-merge
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
