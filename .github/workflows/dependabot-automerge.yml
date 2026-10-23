@@ -1,10 +1,9 @@
 name: Dependabot auto-merge
 
-# Enables GitHub auto-merge on every Dependabot PR, majors included. Auto-merge
-# only completes once the required checks on main pass, so CI is the gate:
-# branch protection must require "Lint, test, and build", and the repo's
-# "Allow auto-merge" setting must be on. Without a required check, --auto
-# merges immediately.
+# Merges a Dependabot PR once "Lint, test, and build" passes on its head
+# commit, majors included. The wait lives here instead of in a required
+# status check on main, because sync-media's bot pushes its manifest commit
+# straight to main and a required check would reject that push.
 on:
   pull_request_target:
     branches: [main]
@@ -13,14 +12,38 @@ permissions:
   contents: write
   pull-requests: write
 
+# A new push to the PR (a Dependabot rebase) supersedes the wait in progress.
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   automerge:
-    name: Enable auto-merge
+    name: Merge when CI passes
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]'
+    timeout-minutes: 25
     steps:
-      - name: Enable auto-merge
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: Wait for CI, then merge
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          for _ in $(seq 1 90); do
+            result=$(gh api "repos/$REPO/commits/$SHA/check-runs" \
+              --jq '[.check_runs[] | select(.name == "Lint, test, and build")] | first | .conclusion // "pending"')
+            case "$result" in
+              success)
+                gh pr merge --squash --match-head-commit "$SHA" "$PR_URL"
+                exit 0
+                ;;
+              pending | null) sleep 15 ;;
+              *)
+                echo "::notice::CI finished as '$result'; leaving the PR for manual review."
+                exit 0
+                ;;
+            esac
+          done
+          echo "::notice::CI did not finish in time; leaving the PR for manual review."
