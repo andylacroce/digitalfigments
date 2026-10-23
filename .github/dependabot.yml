@@ -20,3 +20,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      # init and analyze must run the same version or CodeQL fails with a
+      # configuration error, so they have to be bumped in one PR.
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
