@@ -50,7 +50,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.5.0",
     "markdownlint-cli2": "^0.24.1",
-    "secretlint": "^13.1.0",
+    "secretlint": "^14.0.0",
     "serve": "^14.2.8",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
